@@ -302,6 +302,44 @@ export function ScreenScan({
   );
 }
 
+/**
+ * Camera-feed display: maps one of the facility reference stills onto a
+ * screen surface — the same imagery the scenes are built from, shown in
+ * world as live feeds.
+ */
+export function FeedScreen({
+  src,
+  width = 1.5,
+  height = 0.9,
+}: {
+  src: string;
+  width?: number;
+  height?: number;
+}) {
+  const texture = useMemo(() => {
+    const tex = new THREE.TextureLoader().load(src);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    return tex;
+  }, [src]);
+  return (
+    <group>
+      <mesh>
+        <planeGeometry args={[width, height]} />
+        <meshBasicMaterial map={texture} toneMapped={false} />
+      </mesh>
+      {/* feed label strip */}
+      <mesh position={[0, height / 2 - 0.04, 0.005]}>
+        <planeGeometry args={[width, 0.07]} />
+        <meshBasicMaterial color="#061018" toneMapped={false} transparent opacity={0.75} />
+      </mesh>
+      <mesh position={[-width / 2 + 0.06, height / 2 - 0.04, 0.006]}>
+        <circleGeometry args={[0.018, 10]} />
+        <meshBasicMaterial color="#f87171" toneMapped={false} />
+      </mesh>
+    </group>
+  );
+}
+
 export const SCREEN_KINDS = {
   dashboard: ScreenDashboard,
   network: ScreenNetwork,

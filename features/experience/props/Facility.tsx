@@ -5,7 +5,13 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { journey, setHovered } from "../journey-store";
 import type { Project } from "@/data/projects";
-import { SCREEN_KINDS, ScreenBezel, ScreenCode, type ScreenKind } from "./Screens";
+import {
+  SCREEN_KINDS,
+  ScreenBezel,
+  ScreenCode,
+  FeedScreen,
+  type ScreenKind,
+} from "./Screens";
 
 const DARK_METAL = "#1a2433";
 const BRUSHED = "#2a3850";
@@ -703,6 +709,426 @@ export function Silhouette({
       <mesh position={[0, 0.95, 0]}>
         <sphereGeometry args={[0.1, 8, 8]} />
         <meshStandardMaterial color="#0c1526" roughness={0.8} />
+      </mesh>
+    </group>
+  );
+}
+
+/** Facility signage rendered to a canvas texture — no font files needed. */
+export function SignPanel({
+  position,
+  rotationY = 0,
+  title,
+  lines = [],
+  width = 5,
+  accent = "#9fd8ff",
+}: {
+  position: [number, number, number];
+  rotationY?: number;
+  title: string;
+  lines?: string[];
+  width?: number;
+  accent?: string;
+}) {
+  const texture = useMemo(() => {
+    const c = document.createElement("canvas");
+    c.width = 1024;
+    c.height = 768;
+    const g = c.getContext("2d")!;
+    g.clearRect(0, 0, c.width, c.height);
+    g.textBaseline = "top";
+    g.fillStyle = accent;
+    g.font = "600 84px 'Segoe UI', system-ui, sans-serif";
+    title.split("\n").forEach((t, i) => g.fillText(t, 48, 48 + i * 96));
+    g.fillStyle = "#c9d8e8";
+    g.font = "400 44px 'Segoe UI', system-ui, sans-serif";
+    lines.forEach((l, i) => g.fillText(l, 48, 48 + title.split("\n").length * 96 + 60 + i * 70));
+    g.strokeStyle = accent;
+    g.lineWidth = 4;
+    g.beginPath();
+    g.moveTo(48, 48 + title.split("\n").length * 96 + 24);
+    g.lineTo(48 + 220, 48 + title.split("\n").length * 96 + 24);
+    g.stroke();
+    const tex = new THREE.CanvasTexture(c);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.anisotropy = 4;
+    return tex;
+  }, [title, lines, accent]);
+  const height = width * 0.75;
+  return (
+    <group position={position} rotation={[0, rotationY, 0]}>
+      <mesh>
+        <planeGeometry args={[width, height]} />
+        <meshStandardMaterial
+          color="#0a1220"
+          roughness={0.6}
+          metalness={0.4}
+          transparent
+          opacity={0.92}
+        />
+      </mesh>
+      <mesh position={[0, 0, 0.01]}>
+        <planeGeometry args={[width, height]} />
+        <meshBasicMaterial map={texture} transparent toneMapped={false} />
+      </mesh>
+    </group>
+  );
+}
+
+/** Hanging ring light — the circular luminaires seen through the glass. */
+export function RingLight({
+  position,
+  radius = 1.6,
+  color = "#7dd3fc",
+}: {
+  position: [number, number, number];
+  radius?: number;
+  color?: string;
+}) {
+  return (
+    <group position={position}>
+      <mesh rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[radius, 0.05, 8, 48]} />
+        <meshBasicMaterial color={color} toneMapped={false} />
+      </mesh>
+      <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, -0.02, 0]}>
+        <torusGeometry args={[radius, 0.12, 8, 48]} />
+        <meshBasicMaterial color={color} transparent opacity={0.18} toneMapped={false} />
+      </mesh>
+      {[0, 1, 2].map((i) => (
+        <mesh key={i} position={[Math.cos((i * Math.PI * 2) / 3) * radius * 0.7, 1.1, Math.sin((i * Math.PI * 2) / 3) * radius * 0.7]}>
+          <cylinderGeometry args={[0.015, 0.015, 2.2, 6]} />
+          <meshStandardMaterial color={DARK_METAL} roughness={0.5} metalness={0.7} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+/** Glass display cylinder — the humanoid containment chamber. */
+export function GlassCylinder({
+  position,
+  radius = 2.1,
+  height = 6.4,
+}: {
+  position: [number, number, number];
+  radius?: number;
+  height?: number;
+}) {
+  return (
+    <group position={position}>
+      {/* glass shell */}
+      <mesh position={[0, height / 2 + 0.3, 0]}>
+        <cylinderGeometry args={[radius, radius, height, 36, 1, true]} />
+        <meshPhysicalMaterial
+          color="#a8d4f0"
+          transparent
+          opacity={0.14}
+          roughness={0.03}
+          metalness={0.1}
+          envMapIntensity={1.6}
+          side={THREE.DoubleSide}
+          depthWrite={false}
+        />
+      </mesh>
+      {/* base platform + glow ring */}
+      <mesh position={[0, 0.15, 0]} receiveShadow castShadow>
+        <cylinderGeometry args={[radius + 0.6, radius + 0.8, 0.3, 36]} />
+        <meshStandardMaterial color={BRUSHED} roughness={0.4} metalness={0.7} />
+      </mesh>
+      <mesh position={[0, 0.32, 0]}>
+        <torusGeometry args={[radius + 0.28, 0.05, 8, 48]} />
+        <meshBasicMaterial color="#7dd3fc" toneMapped={false} />
+      </mesh>
+      <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[radius + 0.7, radius + 1.1, 48]} />
+        <meshBasicMaterial color="#7dd3fc" transparent opacity={0.4} toneMapped={false} side={THREE.DoubleSide} />
+      </mesh>
+      {/* ceiling cap ring */}
+      <mesh position={[0, height + 0.34, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[radius + 0.1, 0.08, 8, 48]} />
+        <meshStandardMaterial color={DARK_METAL} roughness={0.4} metalness={0.7} />
+      </mesh>
+      <pointLight color="#7dd3fc" intensity={8} distance={radius * 4} position={[0, 1.2, 0]} />
+    </group>
+  );
+}
+
+/**
+ * Spiral balcony walkway around a center point — the descending
+ * gallery that wraps the nucleus. `a0→a1` in radians, descending y0→y1.
+ */
+export function CurvedWalkway({
+  center,
+  radius = 11.5,
+  a0,
+  a1,
+  y0,
+  y1,
+  width = 3.4,
+  segments = 40,
+}: {
+  center: [number, number];
+  radius?: number;
+  a0: number;
+  a1: number;
+  y0: number;
+  y1: number;
+  width?: number;
+  segments?: number;
+}) {
+  const steps = useMemo(() => {
+    const list: { x: number; z: number; y: number; rot: number; len: number }[] = [];
+    for (let i = 0; i < segments; i++) {
+      const t = i / (segments - 1);
+      const a = a0 + (a1 - a0) * t;
+      const x = center[0] - Math.sin(a) * radius;
+      const z = center[1] + Math.cos(a) * radius;
+      const y = y0 + (y1 - y0) * t;
+      // tangent direction
+      const da = 0.01;
+      const nx = center[0] - Math.sin(a + da) * radius;
+      const nz = center[1] + Math.cos(a + da) * radius;
+      const rot = Math.atan2(nx - x, nz - z);
+      const len = Math.abs(a1 - a0) * radius / segments + 0.1;
+      list.push({ x, z, y, rot, len });
+    }
+    return list;
+  }, [center, radius, a0, a1, y0, y1, segments]);
+
+  return (
+    <group>
+      {steps.map((s, i) => (
+        <group key={i} position={[s.x, s.y, s.z]} rotation={[0, s.rot, 0]}>
+          {/* deck slab */}
+          <mesh receiveShadow castShadow>
+            <boxGeometry args={[width, 0.14, s.len]} />
+            <meshStandardMaterial color="#2a3648" roughness={0.55} metalness={0.55} />
+          </mesh>
+          {/* inner edge light */}
+          <mesh position={[width / 2 - 0.05, 0.08, 0]}>
+            <boxGeometry args={[0.05, 0.02, s.len]} />
+            <meshBasicMaterial color="#7dd3fc" toneMapped={false} transparent opacity={0.8} />
+          </mesh>
+          {/* glass railing on the inner (core-facing) edge, every other step */}
+          {i % 2 === 0 && (
+            <group position={[width / 2 - 0.08, 0.07, 0]}>
+              <mesh position={[0, 0.5, 0]}>
+                <planeGeometry args={[s.len * 2, 1.0]} />
+                <meshPhysicalMaterial
+                  color="#9cc4e4"
+                  transparent
+                  opacity={0.16}
+                  roughness={0.05}
+                  metalness={0.1}
+                  envMapIntensity={1.3}
+                  side={THREE.DoubleSide}
+                  depthWrite={false}
+                />
+              </mesh>
+              <mesh position={[0, 1.02, 0]}>
+                <boxGeometry args={[s.len * 2, 0.05, 0.05]} />
+                <meshStandardMaterial color="#4a6a8e" roughness={0.4} metalness={0.7} />
+              </mesh>
+            </group>
+          )}
+          {/* support bracket to the wall every 4 steps */}
+          {i % 4 === 0 && (
+            <mesh position={[-width / 2 - 0.8, -0.6, 0]} rotation={[0, 0, 0.5]}>
+              <boxGeometry args={[0.2, 1.8, 0.3]} />
+              <meshStandardMaterial color={DARK_METAL} roughness={0.5} metalness={0.7} />
+            </mesh>
+          )}
+        </group>
+      ))}
+    </group>
+  );
+}
+
+/** Irregular rock wall segment for the cavern. */
+export function RockWall({
+  position,
+  rotationY = 0,
+  w = 16,
+  h = 26,
+}: {
+  position: [number, number, number];
+  rotationY?: number;
+  w?: number;
+  h?: number;
+}) {
+  const chunks = useMemo(
+    () =>
+      [...Array(6)].map((_, i) => ({
+        x: (((i * 47) % 100) / 100 - 0.5) * w * 0.9,
+        y: (((i * 31) % 100) / 100 - 0.3) * h * 0.8,
+        s: 3 + ((i * 13) % 10) / 3,
+        r: [(i * 1.7) % Math.PI, (i * 2.3) % Math.PI, (i * 0.9) % Math.PI] as [number, number, number],
+      })),
+    [w, h],
+  );
+  return (
+    <group position={position} rotation={[0, rotationY, 0]}>
+      <mesh receiveShadow>
+        <boxGeometry args={[w, h, 1.6]} />
+        <meshStandardMaterial color="#0c1420" roughness={0.95} metalness={0.05} />
+      </mesh>
+      {chunks.map((c, i) => (
+        <mesh key={i} position={[c.x, c.y, 0.8]} rotation={c.r} scale={[1, 0.7 + (i % 3) * 0.3, 0.5]}>
+          <dodecahedronGeometry args={[c.s, 0]} />
+          <meshStandardMaterial color={i % 2 ? "#101a28" : "#0e1826"} roughness={0.95} metalness={0.03} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+/** Tall window strip with planted greenery silhouettes behind glass. */
+export function GreeneryWindow({
+  position,
+  rotationY = 0,
+  width = 6,
+  height = 8,
+}: {
+  position: [number, number, number];
+  rotationY?: number;
+  width?: number;
+  height?: number;
+}) {
+  const plants = useMemo(
+    () =>
+      [...Array(7)].map((_, i) => ({
+        x: (((i * 41) % 100) / 100 - 0.5) * width * 0.85,
+        h: height * (0.25 + ((i * 23) % 60) / 100),
+        s: 0.5 + ((i * 17) % 10) / 14,
+      })),
+    [width, height],
+  );
+  return (
+    <group position={position} rotation={[0, rotationY, 0]}>
+      {/* glow of a planted atrium behind the glass */}
+      <mesh position={[0, 0, -0.5]}>
+        <planeGeometry args={[width, height]} />
+        <meshBasicMaterial color="#2a4a3a" toneMapped={false} transparent opacity={0.5} />
+      </mesh>
+      {plants.map((p, i) => (
+        <mesh key={i} position={[p.x, -height / 2 + p.h / 2, -0.3]} scale={[1, p.h / (p.s * 2), 0.5]}>
+          <coneGeometry args={[p.s, p.s * 2, 6]} />
+          <meshStandardMaterial color={i % 2 ? "#16351f" : "#1d4227"} roughness={0.9} />
+        </mesh>
+      ))}
+      {/* glass + mullions */}
+      <mesh>
+        <planeGeometry args={[width, height]} />
+        <meshPhysicalMaterial
+          color="#8fc4e8"
+          transparent
+          opacity={0.15}
+          roughness={0.06}
+          metalness={0.2}
+          envMapIntensity={1.4}
+          side={THREE.DoubleSide}
+          depthWrite={false}
+        />
+      </mesh>
+      {[-width / 4, 0, width / 4].map((x) => (
+        <mesh key={x} position={[x, 0, 0.05]}>
+          <boxGeometry args={[0.12, height, 0.12]} />
+          <meshStandardMaterial color={DARK_METAL} roughness={0.45} metalness={0.7} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+/** A cylindrical band of displays ringing the nucleus core. */
+export function DisplayRing({
+  position,
+  radius = 8.5,
+  count = 22,
+  accent = "#38bdf8",
+}: {
+  position: [number, number, number];
+  radius?: number;
+  count?: number;
+  accent?: string;
+}) {
+  const kinds: ScreenKind[] = ["dashboard", "network", "code", "scan"];
+  return (
+    <group position={position}>
+      {[...Array(count)].map((_, i) => {
+        const a = (i * Math.PI * 2) / count;
+        const Screen = SCREEN_KINDS[kinds[i % kinds.length]];
+        return (
+          <group
+            key={i}
+            position={[Math.cos(a) * radius, ((i * 7) % 3) * 0.7 - 0.5, Math.sin(a) * radius]}
+            rotation={[-0.12, -a + Math.PI / 2, 0]}
+          >
+            <ScreenBezel width={1.5} height={0.95}>
+              <Screen accent={i % 5 === 0 ? "#34d399" : accent} width={1.42} height={0.88} />
+            </ScreenBezel>
+          </group>
+        );
+      })}
+    </group>
+  );
+}
+
+/** Foliage mound for exterior terraces. */
+export function FoliageCluster({
+  position,
+  scale = 1,
+}: {
+  position: [number, number, number];
+  scale?: number;
+}) {
+  const blobs = useMemo(
+    () =>
+      [...Array(5)].map((_, i) => ({
+        x: (((i * 37) % 100) / 100 - 0.5) * 1.6,
+        z: (((i * 53) % 100) / 100 - 0.5) * 1.6,
+        s: 0.5 + ((i * 19) % 10) / 12,
+      })),
+    [],
+  );
+  return (
+    <group position={position} scale={scale}>
+      {blobs.map((b, i) => (
+        <mesh key={i} position={[b.x, b.s * 0.6, b.z]} castShadow>
+          <dodecahedronGeometry args={[b.s, 1]} />
+          <meshStandardMaterial color={i % 2 ? "#1e4429" : "#285c34"} roughness={0.9} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+/** Freestanding monitor on a pole showing a facility camera feed. */
+export function FeedMonitor({
+  position,
+  rotationY = 0,
+  src,
+  width = 2.4,
+}: {
+  position: [number, number, number];
+  rotationY?: number;
+  src: string;
+  width?: number;
+}) {
+  const h = width * 0.5625;
+  return (
+    <group position={position} rotation={[0, rotationY, 0]}>
+      <ScreenBezel width={width} height={h}>
+        <FeedScreen src={src} width={width - 0.08} height={h - 0.08} />
+      </ScreenBezel>
+      <mesh position={[0, -h / 2 - 0.75, -0.05]} castShadow>
+        <cylinderGeometry args={[0.05, 0.08, 1.5, 8]} />
+        <meshStandardMaterial color={DARK_METAL} roughness={0.45} metalness={0.7} />
+      </mesh>
+      <mesh position={[0, -h / 2 - 1.5, -0.05]} receiveShadow>
+        <cylinderGeometry args={[0.3, 0.38, 0.08, 12]} />
+        <meshStandardMaterial color={DARK_METAL} roughness={0.5} metalness={0.7} />
       </mesh>
     </group>
   );

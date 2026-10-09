@@ -46,9 +46,10 @@ features/experience/
   journey-store.ts     # mutable journey store (no React state per frame)
   props/               # reusable kit: Facility (architecture, robots,
                        # bays), Screens (animated display content)
-  worlds/              # ExteriorWorld (glass facade + city), OpsFloorWorld
-                       # (server aisles + project bays), DescentWorld
-                       # (stairwell void), NucleusWorld (the core)
+  worlds/              # ExteriorWorld (cliff-top pavilion over the city),
+                       # OpsFloorWorld (daylight lab, mezzanine, project
+                       # bays), DescentWorld (bridge + curved balcony),
+                       # NucleusWorld (glass core + display ring)
 
 data/                  # single source of truth: projects, skills, timeline, profile
 lib/i18n/              # locales + typed dictionaries (en / fr / ar)
@@ -63,11 +64,11 @@ lib/i18n/              # locales + typed dictionaries (en / fr / ar)
   `journey.progress` (0 → 1).
 - `CameraRig` interpolates `CAMERA_KEYS` — position + look-at keyframes —
   every frame, with banking into turns and pointer parallax. The route:
-  drone approach across the plaza → sliding glass doors → the AI
-  operations floor → a monumental stairwell descent → the underground
-  nucleus, revealed from a low upward-looking angle.
+  drone approach over the cliff terrace → sliding glass doors → the
+  daylight lab → a bridge across the cavern → a curved balcony spiraling
+  down around the nucleus → the chamber floor, looking up at the core.
 - `COLOR_STOPS` cross-fade `scene.background` and fog so each environment
-  owns its palette (golden-hour exterior → cool ops floor → deep blue
+  owns its palette (golden-hour exterior → bright lab → deep blue
   descent → the glowing core).
 - Project bays register in `journey.interactables`; `InteractionRig`
   raycasts on pointer move (and on scroll so hover tracks a still cursor),

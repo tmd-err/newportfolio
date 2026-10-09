@@ -12,8 +12,9 @@ import { journey } from "./journey-store";
 
 /**
  * One continuous journey through an AI research facility:
- *   plaza approach 0 → glass facade -24 → ops floor -30…-118
- *   → stairwell descent -120…-162 → nucleus chamber -170…-235 (y≈-14)
+ *   terrace approach 0 → glass facade -24 → daylight lab -24…-118
+ *   → gallery bridge -120…-181 → balcony arc around the nucleus (0,-198)
+ *   → chamber floor y-14, camera low looking up at the core.
  */
 export default function ExperienceCanvas() {
   return (
