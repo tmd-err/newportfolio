@@ -12,46 +12,42 @@ export interface ColorStop {
 }
 
 /**
- * The journey choreographed as camera keyframes. Section heights are set in
- * svh so each act owns a fixed scroll fraction regardless of viewport size.
+ * The cosmic journey choreographed as camera keyframes.
  *
- * World map (z into the screen):
- *   terrace plaza 0 → lab entrance -18 → ops floor -24…-110
- *   → gallery bridge -118…-180 → balcony arc around the nucleus (0,-196)
- *   → chamber floor y-14, camera low looking up at the core.
+ * Space map (z into the void):
+ *   open void 0 → planet approach (36,-20,-215 r22) → five project
+ *   stations along -250…-450 → ringed planet (-26,14,-480) + system star
+ *   (-50,30,-530) → quiet drift → luminous star + disc (0,-2,-645).
  */
 export const CAMERA_KEYS: CameraKey[] = [
-  { p: 0.0, pos: [16, 8.5, 24], look: [0, 7, -38] }, // drone establishing shot
-  { p: 0.05, pos: [10, 6, 4], look: [-1, 6.5, -34] }, // lateral sweep to the front
-  { p: 0.09, pos: [4, 3.4, -8], look: [0, 4, -24] }, // nearing the facade
-  { p: 0.14, pos: [0, 2.3, -15], look: [0, 2.6, -32] }, // at the glass doors
-  { p: 0.175, pos: [0, 2.1, -24], look: [0, 2.2, -46] }, // inside — the lab
-  { p: 0.21, pos: [-3.5, 2.1, -34], look: [-8.5, 1.8, -50] }, // robot display left
-  { p: 0.27, pos: [3, 2.1, -46], look: [8.5, 1.7, -60] }, // EdTech bay (right)
-  { p: 0.34, pos: [-3, 2.1, -58], look: [-8.5, 1.7, -72] }, // CraftHUB (left)
-  { p: 0.41, pos: [3, 2.1, -70], look: [8.5, 1.7, -84] }, // VELORA (right)
-  { p: 0.475, pos: [-3, 2.1, -82], look: [-8.5, 1.7, -96] }, // AutoTrack (left)
-  { p: 0.545, pos: [0, 2.2, -94], look: [0, 1.7, -110] }, // FaceDetector (center)
-  { p: 0.6, pos: [0, 2.5, -106], look: [0, 0.5, -130] }, // toward the gallery
-  { p: 0.66, pos: [0, 2.4, -114], look: [0, -2, -150] }, // overlook — cavern opens
-  { p: 0.72, pos: [0, 0.7, -140], look: [0, -3, -185] }, // gallery bridge over the void
-  { p: 0.78, pos: [-1.5, -0.8, -168], look: [0, -2, -196] }, // reaching the walkway
-  { p: 0.84, pos: [-9.5, -5, -188], look: [0, 0, -198] }, // west arc, core in view
-  { p: 0.9, pos: [-6, -9.5, -198], look: [0, 8, -198] }, // lower arc — look UP
-  { p: 0.955, pos: [-1, -11, -194], look: [0, 13, -199] }, // base, rising gaze
-  { p: 1.0, pos: [2, -10.8, -191], look: [0, 15, -198] }, // final low-angle pose
+  { p: 0.0, pos: [0, 0, 4], look: [0, 0, -120] }, // restrained deep-space open
+  { p: 0.05, pos: [0, 0, -16], look: [4, -4, -140] }, // gentle advance
+  { p: 0.1, pos: [4, -1, -50], look: [24, -12, -215] }, // planet enters frame
+  { p: 0.15, pos: [6, -3, -100], look: [32, -18, -215] },
+  { p: 0.2, pos: [6, -5, -150], look: [34, -19, -218] }, // planet fills the view
+  { p: 0.26, pos: [4, -4, -195], look: [10, -6, -250] }, // over the limb, onward
+  { p: 0.31, pos: [6, -3, -243], look: [10, -2, -250] }, // EdTech station
+  { p: 0.37, pos: [-6, 2, -292], look: [-14, 4, -300] }, // CraftHUB
+  { p: 0.44, pos: [8, 4, -342], look: [14, 6, -350] }, // VELORA
+  { p: 0.5, pos: [-6, -1, -392], look: [-12, -2, -400] }, // AutoTrack
+  { p: 0.56, pos: [2, 0, -442], look: [4, 0, -450] }, // FaceDetector
+  { p: 0.62, pos: [0, 6, -465], look: [-26, 14, -480] }, // ringed planet reveal
+  { p: 0.68, pos: [-8, 9, -498], look: [-50, 30, -530] }, // the system star
+  { p: 0.74, pos: [-4, 8, -536], look: [-10, 8, -620] }, // stillness — drift on
+  { p: 0.8, pos: [2, 5, -566], look: [0, -2, -645] }, // destination emerging
+  { p: 0.88, pos: [2, 3, -596], look: [0, -2, -650] },
+  { p: 0.95, pos: [0, 4, -614], look: [0, -2, -650] },
+  { p: 1.0, pos: [0, 4, -626], look: [0, -2, -648] }, // facing the star + disc
 ];
 
 export const COLOR_STOPS: ColorStop[] = [
-  { p: 0.0, bg: "#f0a868", fog: "#eec39c" }, // golden-hour exterior
-  { p: 0.09, bg: "#dd9468", fog: "#e0ab84" }, // dusk approach
-  { p: 0.15, bg: "#8fa8c4", fog: "#a8bccc" }, // through the glass
-  { p: 0.21, bg: "#b8c8da", fog: "#c2d0de" }, // bright daylight lab
-  { p: 0.36, bg: "#afc0d4", fog: "#bacadb" },
-  { p: 0.5, bg: "#a8b8cc", fog: "#b2c2d4" },
-  { p: 0.62, bg: "#2a3c58", fog: "#263c5c" }, // gallery edge — dark falls
-  { p: 0.72, bg: "#12223e", fog: "#122542" }, // descent
-  { p: 0.84, bg: "#0a1628", fog: "#0b1a32" },
-  { p: 0.93, bg: "#060f20", fog: "#081628" },
-  { p: 1.0, bg: "#050b16", fog: "#060f20" }, // nucleus chamber
+  { p: 0.0, bg: "#020309", fog: "#04060d" }, // void
+  { p: 0.12, bg: "#030412", fog: "#050713" },
+  { p: 0.25, bg: "#04051a", fog: "#060a1c" }, // indigo around the planet
+  { p: 0.4, bg: "#030414", fog: "#050816" },
+  { p: 0.56, bg: "#040518", fog: "#060a1a" },
+  { p: 0.66, bg: "#070a1e", fog: "#080e20" }, // faint warmth near the star
+  { p: 0.78, bg: "#040613", fog: "#060a18" },
+  { p: 0.9, bg: "#030512", fog: "#050914" },
+  { p: 1.0, bg: "#040714", fog: "#060b16" }, // the destination glow
 ];

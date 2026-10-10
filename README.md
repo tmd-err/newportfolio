@@ -44,12 +44,12 @@ features/experience/
   InteractionRig.tsx   # raycast hover/click for 3D installations
   camera-path.ts       # camera keyframes + color stops (the choreography)
   journey-store.ts     # mutable journey store (no React state per frame)
-  props/               # reusable kit: Facility (architecture, robots,
-                       # bays), Screens (animated display content)
-  worlds/              # ExteriorWorld (cliff-top pavilion over the city),
-                       # OpsFloorWorld (daylight lab, mezzanine, project
-                       # bays), DescentWorld (bridge + curved balcony),
-                       # NucleusWorld (glass core + display ring)
+  props/               # reusable kit: Cosmos (starfields, nebulae, planet
+                       # shaders, rings, galaxy, accretion disc, stations)
+  worlds/              # DeepSpaceWorld (stars, nebulae, galaxy),
+                       # PlanetWorld (procedural planet + moon + debris),
+                       # StationsWorld (project destinations),
+                       # SystemWorld (ringed planet, stars, accretion disc)
 
 data/                  # single source of truth: projects, skills, timeline, profile
 lib/i18n/              # locales + typed dictionaries (en / fr / ar)
@@ -64,15 +64,15 @@ lib/i18n/              # locales + typed dictionaries (en / fr / ar)
   `journey.progress` (0 → 1).
 - `CameraRig` interpolates `CAMERA_KEYS` — position + look-at keyframes —
   every frame, with banking into turns and pointer parallax. The route:
-  drone approach over the cliff terrace → sliding glass doors → the
-  daylight lab → a bridge across the cavern → a curved balcony spiraling
-  down around the nucleus → the chamber floor, looking up at the core.
-- `COLOR_STOPS` cross-fade `scene.background` and fog so each environment
-  owns its palette (golden-hour exterior → bright lab → deep blue
-  descent → the glowing core).
-- Project bays register in `journey.interactables`; `InteractionRig`
+  deep-space drift → a slow approach past a procedural planet → five
+  project stations → a ringed planet beneath the system star → a quiet
+  drift → the luminous destination star and its accretion disc.
+- `COLOR_STOPS` cross-fade `scene.background` and fog so each stretch owns
+  a subtle palette shift (void → indigo near the planet → the faint warm
+  haze of the destination star).
+- Project stations register in `journey.interactables`; `InteractionRig`
   raycasts on pointer move (and on scroll so hover tracks a still cursor),
-  lighting the bay's accent and showing a DOM chip. Clicking empty space
+  swelling the beacon light and showing a DOM chip. Clicking empty space
   while hovering navigates to the project page.
 - A custom reticle cursor (`CustomCursor`) replaces the system cursor on
   fine pointers — context states for links and 3D interactables.
