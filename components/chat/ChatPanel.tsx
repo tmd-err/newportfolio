@@ -41,6 +41,7 @@ export function ChatPanel({ dict }: { dict: Dictionary["chat"] }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: next }),
+        signal: AbortSignal.timeout(30000),
       });
       if (!res.ok) throw new Error("bad response");
       const data = await res.json();

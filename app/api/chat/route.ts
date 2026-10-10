@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { buildSystemPrompt } from "@/lib/chat-knowledge";
 
-const MODEL = "gemini-3.8-flash";
+/** Ordered fallback chain — newer flash models get demand spikes. */
+const MODELS = [
+  "gemini-3.5-flash-lite",
+  "gemini-3.8-flash",
+  "gemini-flash-lite-latest",
+];
 const MAX_HISTORY = 12;
 const MAX_LEN = 2000;
 
@@ -39,37 +44,36 @@ export async function POST(req: NextRequest) {
     parts: [{ text: m.content.slice(0, MAX_LEN) }],
   }));
 
-  try {
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${key}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          systemInstruction: {
-            parts: [{ text: buildSystemPrompt() }],
-          },
-          contents,
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 1500,
-          },
-        }),
-      },
-    );
-    if (!res.ok) {
-      return NextResponse.json({ error: "upstream" }, { status: 502 });
+  const payload = JSON.stringify({
+    systemInstruction: { parts: [{ text: buildSystemPrompt() }] },
+    contents,
+    generationConfig: {
+      temperature: 0.7,
+      maxOutputTokens: 600,
+    },
+  });
+
+  for (const model of MODELS) {
+    try {
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: payload,
+          signal: AbortSignal.timeout(20000),
+        },
+      );
+      if (!res.ok) continue; // overloaded/retired → next model
+      const data = await res.json();
+      const reply: string =
+        data?.candidates?.[0]?.content?.parts
+          ?.map((p: { text?: string }) => p.text ?? "")
+          .join("") ?? "";
+      if (reply) return NextResponse.json({ reply });
+    } catch {
+      // timeout/network error → next model
     }
-    const data = await res.json();
-    const reply: string =
-      data?.candidates?.[0]?.content?.parts
-        ?.map((p: { text?: string }) => p.text ?? "")
-        .join("") ?? "";
-    if (!reply) {
-      return NextResponse.json({ error: "empty" }, { status: 502 });
-    }
-    return NextResponse.json({ reply });
-  } catch {
-    return NextResponse.json({ error: "upstream" }, { status: 502 });
   }
+  return NextResponse.json({ error: "upstream" }, { status: 502 });
 }
