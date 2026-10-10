@@ -1,6 +1,7 @@
 import type { Dictionary } from "@/lib/i18n";
 import { skillGroups } from "@/data/skills";
 import { Reveal } from "@/components/Reveal";
+import { SkillCard } from "@/components/SkillCard";
 import { SceneSection } from "./SectionShell";
 
 export function SkillsSection({ dict }: { dict: Dictionary }) {
@@ -20,35 +21,11 @@ export function SkillsSection({ dict }: { dict: Dictionary }) {
         <div className="mt-9 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {skillGroups.map((g, i) => (
             <Reveal key={g.id} delay={i * 70}>
-              <div className="panel h-full p-5">
-                <div className="flex items-center gap-2.5">
-                  <span
-                    className="size-2 rounded-full"
-                    style={{
-                      background: g.accent,
-                      boxShadow: `0 0 12px ${g.accent}`,
-                    }}
-                    aria-hidden
-                  />
-                  <h3 className="text-sm font-semibold text-ink">
-                    {dict.skills.groups[g.id].title}
-                  </h3>
-                </div>
-                <p className="mt-1.5 text-xs leading-relaxed text-dim">
-                  {dict.skills.groups[g.id].blurb}
-                </p>
-                <div className="mt-3.5 flex flex-wrap gap-1.5">
-                  {g.items.map((item) => (
-                    <span
-                      key={item}
-                      className="chip transition-colors hover:text-ink"
-                      style={{ borderColor: `${g.accent}33` }}
-                    >
-                      {item}
-                    </span>
-                  ))}
-                </div>
-              </div>
+              <SkillCard
+                group={g}
+                title={dict.skills.groups[g.id].title}
+                blurb={dict.skills.groups[g.id].blurb}
+              />
             </Reveal>
           ))}
         </div>

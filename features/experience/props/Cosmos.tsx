@@ -50,6 +50,45 @@ const NOISE_GLSL = /* glsl */ `
   }
 `;
 
+/* 3D value noise — seamless when sampled on the sphere's surface. */
+const NOISE3_GLSL = /* glsl */ `
+  float hash3(vec3 p) {
+    return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453123);
+  }
+  float vnoise3(vec3 p) {
+    vec3 i = floor(p);
+    vec3 f = fract(p);
+    f = f * f * (3.0 - 2.0 * f);
+    return mix(
+      mix(
+        mix(hash3(i), hash3(i + vec3(1, 0, 0)), f.x),
+        mix(hash3(i + vec3(0, 1, 0)), hash3(i + vec3(1, 1, 0)), f.x),
+        f.y
+      ),
+      mix(
+        mix(hash3(i + vec3(0, 0, 1)), hash3(i + vec3(1, 0, 1)), f.x),
+        mix(hash3(i + vec3(0, 1, 1)), hash3(i + vec3(1, 1, 1)), f.x),
+        f.y
+      ),
+      f.z
+    );
+  }
+  float fbm3(vec3 p) {
+    float v = 0.0;
+    float a = 0.5;
+    for (int i = 0; i < 5; i++) {
+      v += a * vnoise3(p);
+      p *= 2.07;
+      a *= 0.5;
+    }
+    return v;
+  }
+  /* ridge lines → cellular granulation, dark valleys between bright cells */
+  float ridged3(vec3 p) {
+    return 1.0 - abs(fbm3(p) * 2.0 - 1.0);
+  }
+`;
+
 /* ── Starfield ──────────────────────────────────────────────────── */
 
 /** Instanced star layer with per-star size, color and twinkle. */
@@ -894,9 +933,9 @@ function makeGlowTexture(): THREE.Texture {
   const g = c.getContext("2d")!;
   const grad = g.createRadialGradient(64, 64, 0, 64, 64, 64);
   grad.addColorStop(0, "rgba(255,255,255,1)");
-  grad.addColorStop(0.25, "rgba(190,225,255,0.55)");
-  grad.addColorStop(0.6, "rgba(120,170,255,0.16)");
-  grad.addColorStop(1, "rgba(60,100,220,0)");
+  grad.addColorStop(0.25, "rgba(255,235,200,0.55)");
+  grad.addColorStop(0.6, "rgba(255,190,110,0.16)");
+  grad.addColorStop(1, "rgba(220,120,40,0)");
   g.fillStyle = grad;
   g.fillRect(0, 0, 128, 128);
   const tex = new THREE.CanvasTexture(c);
@@ -909,7 +948,7 @@ function getGlowTexture() {
   return glowTex;
 }
 
-/** A radiant star: bright core + layered billboards + light. */
+/** A luminous star: bright core + layered glow billboards + light. */
 export function StarGlow({
   position,
   coreRadius = 3,
@@ -926,8 +965,7 @@ export function StarGlow({
   const s1 = useRef<THREE.Sprite>(null);
   useFrame((state) => {
     if (s1.current && !journey.reducedMotion) {
-      const t = state.clock.elapsedTime;
-      s1.current.material.rotation = Math.sin(t * 0.1) * 0.3;
+      s1.current.material.rotation = Math.sin(state.clock.elapsedTime * 0.1) * 0.3;
     }
   });
   return (
@@ -955,6 +993,233 @@ export function StarGlow({
         />
       </sprite>
       <pointLight color={color} intensity={intensity} distance={0} decay={0.6} />
+    </group>
+  );
+}
+
+/* ── The Sun ────────────────────────────────────────────────────── */
+
+const SUN_SURFACE_VERT = /* glsl */ `
+  ${NOISE3_GLSL}
+  uniform float uTime;
+  varying vec3 vObj;
+  varying vec3 vNormV;
+  varying vec3 vViewV;
+  void main() {
+    vObj = normalize(position);
+    // subtle plasma relief — incandescent, not rocky
+    float bump = ridged3(vObj * 9.0 + uTime * 0.05) * 0.012
+               + fbm3(vObj * 3.0 - uTime * 0.02) * 0.02;
+    vec3 p = position * (1.0 + bump);
+    vec4 mv = modelViewMatrix * vec4(p, 1.0);
+    vNormV = normalMatrix * normal;
+    vViewV = -mv.xyz;
+    gl_Position = projectionMatrix * mv;
+  }
+`;
+
+const SUN_SURFACE_FRAG = /* glsl */ `
+  ${NOISE3_GLSL}
+  uniform float uTime;
+  uniform float uDetail;
+  varying vec3 vObj;
+  varying vec3 vNormV;
+  varying vec3 vViewV;
+  void main() {
+    vec3 n = normalize(vObj);
+    float t = uTime;
+
+    // evolving domain warp — the warp itself drifts, so nothing scrolls
+    vec3 w = n * 3.0 + 1.15 * vec3(
+      fbm3(n * 2.3 + t * 0.021),
+      fbm3(n * 2.3 + 7.3 - t * 0.017),
+      fbm3(n * 2.3 + 3.1 + t * 0.014)
+    );
+
+    // three granulation scales: broad convection, cells, fine grain
+    float large = fbm3(w * 1.5 + t * 0.028);
+    float mid   = ridged3(w * 4.2 - t * 0.045);
+    float fine  = ridged3(w * 10.5 + t * 0.07) * uDetail;
+    float g = large * 0.5 + mid * 0.34 + fine * 0.26;
+
+    // active regions — luminous patches that breathe slowly
+    float act = smoothstep(0.62, 0.9, fbm3(n * 1.9 + 31.0 + t * 0.012));
+    act *= 0.75 + 0.25 * sin(t * 0.09 + n.y * 9.0);
+
+    // sunspots — sparse, irregular, never black
+    float spot = smoothstep(0.7, 0.84, fbm3(n * 1.4 + 83.0));
+
+    // photosphere palette: ember → amber → gold → near-white
+    vec3 ember = vec3(0.42, 0.11, 0.015);
+    vec3 amber = vec3(0.95, 0.42, 0.05);
+    vec3 gold  = vec3(1.12, 0.78, 0.26);
+    vec3 white = vec3(1.28, 1.16, 0.85);
+    vec3 col = mix(ember, amber, smoothstep(0.16, 0.42, g));
+    col = mix(col, gold,  smoothstep(0.44, 0.68, g));
+    col = mix(col, white, smoothstep(0.7, 0.92, g));
+
+    col += act * vec3(0.3, 0.24, 0.1);   // bright magnetic regions
+    col *= 1.0 - spot * 0.5;             // restrained sunspots
+
+    // limb darkening — edges deepen toward amber-red
+    float mu = clamp(dot(normalize(vNormV), normalize(vViewV)), 0.0, 1.0);
+    col = mix(col * vec3(1.0, 0.55, 0.28) * 0.62, col, pow(mu, 0.55));
+
+    gl_FragColor = vec4(col, 1.0);
+  }
+`;
+
+/* shared vertex shader for the flat corona shells (no surface relief) */
+const SUN_SHELL_VERT = /* glsl */ `
+  varying vec3 vObj;
+  varying vec3 vNormV;
+  varying vec3 vViewV;
+  void main() {
+    vObj = normalize(position);
+    vec4 mv = modelViewMatrix * vec4(position, 1.0);
+    vNormV = normalMatrix * normal;
+    vViewV = -mv.xyz;
+    gl_Position = projectionMatrix * mv;
+  }
+`;
+
+const SUN_RIM_FRAG = /* glsl */ `
+  ${NOISE3_GLSL}
+  uniform float uTime;
+  varying vec3 vObj;
+  varying vec3 vNormV;
+  varying vec3 vViewV;
+  void main() {
+    vec3 n = normalize(vObj);
+    float mu = abs(dot(normalize(vNormV), normalize(vViewV)));
+    float rim = pow(1.0 - mu, 3.2);
+    // irregular filament noise along the limb
+    float fil = fbm3(n * 7.0 + uTime * 0.05);
+    float fil2 = fbm3(n * 14.0 - uTime * 0.07);
+    float a = rim * (0.35 + fil * 0.75 + fil2 * 0.3);
+    vec3 col = mix(vec3(1.0, 0.5, 0.12), vec3(1.2, 0.9, 0.4), fil);
+    gl_FragColor = vec4(col, a);
+  }
+`;
+
+const SUN_CORONA_VERT = /* glsl */ `
+  varying vec2 vUv;
+  void main() {
+    vUv = uv * 2.0 - 1.0;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`;
+
+const SUN_CORONA_FRAG = /* glsl */ `
+  ${NOISE_GLSL}
+  uniform float uTime;
+  varying vec2 vUv;
+  void main() {
+    float d = length(vUv);
+    float ang = atan(vUv.y, vUv.x);
+
+    // asymmetric radial falloff — some directions reach further
+    float reach = 0.62 + 0.4 * fbm(vec2(ang * 1.6, 3.7) + uTime * 0.01);
+    float fall = exp(-d * 5.2 / reach);
+
+    // gentle directional variation — wispy, not streaky
+    float wisps = fbm(vec2(ang * 2.2, d * 5.0 - uTime * 0.018));
+    float a = fall * (0.65 + wisps * 0.35) * smoothstep(1.0, 0.7, d);
+
+    vec3 col = mix(vec3(1.1, 0.5, 0.1), vec3(1.3, 1.15, 0.8), exp(-d * 6.0));
+    gl_FragColor = vec4(col, a * 0.85);
+  }
+`;
+
+/**
+ * The Sun — layered star: granular animated photosphere, irregular
+ * chromosphere rim, and a billboarded corona glow.
+ */
+export function Sun({
+  position,
+  radius = 9,
+}: {
+  position: [number, number, number];
+  radius?: number;
+}) {
+  const surf = useRef<THREE.ShaderMaterial>(null);
+  const rim = useRef<THREE.ShaderMaterial>(null);
+  const corona = useRef<THREE.Mesh>(null);
+  const coronaMat = useRef<THREE.ShaderMaterial>(null);
+  const photosphere = useRef<THREE.Mesh>(null);
+
+  const detail = journey.lowQuality ? 0 : 1;
+  const seg = journey.lowQuality ? 48 : 96;
+
+  const surfaceUniforms = useMemo(
+    () => ({
+      uTime: { value: 0 },
+      uDetail: { value: detail },
+    }),
+    [detail],
+  );
+  const rimUniforms = useMemo(() => ({ uTime: { value: 0 } }), []);
+  const coronaUniforms = useMemo(() => ({ uTime: { value: 0 } }), []);
+
+  useFrame((state) => {
+    const t = state.clock.elapsedTime;
+    const reduced = journey.reducedMotion;
+    if (!reduced) {
+      if (surf.current) surf.current.uniforms.uTime.value = t;
+      if (rim.current) rim.current.uniforms.uTime.value = t;
+      if (coronaMat.current) coronaMat.current.uniforms.uTime.value = t;
+      // very slow rotation — plasma pattern evolves in-shader too
+      if (photosphere.current) photosphere.current.rotation.y = t * 0.004;
+    }
+    // corona billboard always faces the camera
+    if (corona.current) {
+      corona.current.quaternion.copy(state.camera.quaternion);
+    }
+  });
+
+  return (
+    <group position={position}>
+      {/* photosphere */}
+      <mesh ref={photosphere}>
+        <sphereGeometry args={[radius, seg, seg]} />
+        <shaderMaterial
+          ref={surf}
+          uniforms={surfaceUniforms}
+          vertexShader={SUN_SURFACE_VERT}
+          fragmentShader={SUN_SURFACE_FRAG}
+        />
+      </mesh>
+
+      {/* chromosphere — thin irregular limb glow */}
+      <mesh scale={1.035}>
+        <sphereGeometry args={[radius, 48, 48]} />
+        <shaderMaterial
+          ref={rim}
+          uniforms={rimUniforms}
+          vertexShader={SUN_SHELL_VERT}
+          fragmentShader={SUN_RIM_FRAG}
+          transparent
+          depthWrite={false}
+          blending={THREE.AdditiveBlending}
+        />
+      </mesh>
+
+      {/* outer corona — billboarded glow field */}
+      <mesh ref={corona}>
+        <planeGeometry args={[radius * 11, radius * 11]} />
+        <shaderMaterial
+          ref={coronaMat}
+          uniforms={coronaUniforms}
+          vertexShader={SUN_CORONA_VERT}
+          fragmentShader={SUN_CORONA_FRAG}
+          transparent
+          depthWrite={false}
+          blending={THREE.AdditiveBlending}
+        />
+      </mesh>
+
+      {/* sunlight */}
+      <pointLight color="#ffd9a0" intensity={5} distance={0} decay={0.6} />
     </group>
   );
 }

@@ -16,32 +16,32 @@ export interface SkillGroup {
 export const skillGroups: SkillGroup[] = [
   {
     id: "languages",
-    accent: "#38bdf8",
+    accent: "#8fc3c9",
     items: ["JavaScript", "TypeScript", "PHP", "Python", "Java"],
   },
   {
     id: "frontend",
-    accent: "#22d3ee",
+    accent: "#4a8fb8",
     items: ["React", "Next.js", "Tailwind CSS", "HTML5", "CSS3", "shadcn/ui"],
   },
   {
     id: "backend",
-    accent: "#fb923c",
+    accent: "#b0653f",
     items: ["Laravel", "Node.js", "Express.js"],
   },
   {
     id: "data",
-    accent: "#34d399",
+    accent: "#5f8a86",
     items: ["MySQL", "PostgreSQL", "MongoDB", "Oracle", "SQL", "NoSQL"],
   },
   {
     id: "architecture",
-    accent: "#c084fc",
+    accent: "#c9bb95",
     items: ["REST API", "MVC", "OOP", "Microservices", "Agile"],
   },
   {
     id: "tools",
-    accent: "#fbbf24",
+    accent: "#a9bcc4",
     items: ["Git", "GitHub", "Docker", "CI/CD", "Postman", "Figma"],
   },
 ];

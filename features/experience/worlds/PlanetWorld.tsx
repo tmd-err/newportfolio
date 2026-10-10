@@ -1,6 +1,6 @@
 "use client";
 
-import { Planet, Moon, GasGiant, AsteroidBelt, StarGlow } from "../props/Cosmos";
+import { Planet, Moon, GasGiant, AsteroidBelt, Sun } from "../props/Cosmos";
 
 /**
  * The inner Solar System — Mercury, Venus, Earth, Mars, plus the Sun
@@ -10,14 +10,8 @@ import { Planet, Moon, GasGiant, AsteroidBelt, StarGlow } from "../props/Cosmos"
 export function PlanetWorld() {
   return (
     <group>
-      {/* the Sun — warm light source, upper-left of the open */}
-      <StarGlow
-        position={[-180, 100, -250]}
-        coreRadius={9}
-        glowScale={150}
-        color="#ffd9a0"
-        intensity={4}
-      />
+      {/* the Sun — layered living star, upper-left of the open */}
+      <Sun position={[-180, 100, -250]} radius={9} />
 
       {/* Mercury — small cratered grey world */}
       <Moon
@@ -87,7 +81,7 @@ export function PlanetWorld() {
       <AsteroidBelt center={[0, -5, -575]} count={160} spread={[110, 14, 55]} />
 
       {/* sunlight */}
-      <directionalLight position={[-180, 100, -250]} intensity={1.7} color="#f2ecd9" />
+      <directionalLight position={[-180, 100, -250]} intensity={1.7} color="#f7ead0" />
       <hemisphereLight args={["#161a22", "#050507", 0.45]} />
     </group>
   );
