@@ -122,10 +122,10 @@ export function ExperienceLayer({
         className="pointer-events-none fixed inset-0 -z-10"
         style={{
           background:
-            "radial-gradient(60% 50% at 20% 15%, rgba(56,189,248,.16), transparent 60%)," +
-            "radial-gradient(50% 40% at 80% 30%, rgba(168,85,247,.14), transparent 60%)," +
-            "radial-gradient(55% 45% at 60% 85%, rgba(251,146,60,.12), transparent 60%)," +
-            "#050816",
+            "radial-gradient(60% 50% at 20% 15%, rgba(113,138,154,.14), transparent 60%)," +
+            "radial-gradient(50% 40% at 80% 30%, rgba(70,80,95,.12), transparent 60%)," +
+            "radial-gradient(55% 45% at 60% 85%, rgba(183,121,85,.10), transparent 60%)," +
+            "#090a0c",
         }}
       />
     );
@@ -140,8 +140,8 @@ export function ExperienceLayer({
           className="absolute inset-0"
           style={{
             background:
-              "radial-gradient(120% 95% at 50% 42%, transparent 52%, rgba(4,6,15,.5) 100%)," +
-              "linear-gradient(to bottom, rgba(4,6,15,.28), transparent 18%, transparent 82%, rgba(4,6,15,.35))",
+              "radial-gradient(120% 95% at 50% 42%, transparent 52%, rgba(9,10,12,.5) 100%)," +
+              "linear-gradient(to bottom, rgba(9,10,12,.28), transparent 18%, transparent 82%, rgba(9,10,12,.35))",
           }}
         />
       </div>
@@ -151,10 +151,10 @@ export function ExperienceLayer({
           className="pointer-events-none fixed bottom-8 left-1/2 z-20 -translate-x-1/2"
           aria-hidden
         >
-          <div className="flex items-center gap-2 rounded-full border border-white/25 bg-black/55 px-4 py-2 text-sm font-medium text-white shadow-lg backdrop-blur-md">
-            <span className="inline-block h-2 w-2 rounded-full bg-emerald-300" />
+          <div className="flex items-center gap-2.5 rounded-sm border border-ink/20 bg-abyss/75 px-4 py-2 font-mono text-xs tracking-wide text-ink backdrop-blur-md">
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-teal" />
             {hoveredName}
-            <span className="text-white/60">· {dict.projects.viewProject}</span>
+            <span className="text-mist">· {dict.projects.viewProject}</span>
           </div>
         </div>
       )}

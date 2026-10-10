@@ -34,10 +34,10 @@ export function JourneySection({ dict }: { dict: Dictionary }) {
                 i % 2 === 0 ? "justify-start" : "justify-end"
               }`}
             >
-              <Reveal className="panel w-full max-w-md rounded-3xl p-6 sm:p-7">
+              <Reveal className="panel w-full max-w-md p-6 sm:p-7">
                 <div className="flex items-center gap-3">
                   <span
-                    className="flex size-9 items-center justify-center rounded-xl"
+                    className="flex size-9 items-center justify-center rounded"
                     style={{
                       background: `${accent}1f`,
                       color: accent,

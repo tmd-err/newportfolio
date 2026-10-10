@@ -60,7 +60,7 @@ export function ContactSection({
               const Icon = c.icon;
               const inner = (
                 <>
-                  <Icon className="size-4 shrink-0 text-cyan" aria-hidden />
+                  <Icon className="size-4 shrink-0 text-mineral" aria-hidden />
                   <span className="text-xs uppercase tracking-[0.18em] text-dim">
                     {c.label}
                   </span>
@@ -73,14 +73,14 @@ export function ContactSection({
                   href={c.href}
                   target={c.href.startsWith("http") ? "_blank" : undefined}
                   rel="noopener noreferrer"
-                  className="panel flex items-center gap-3 rounded-2xl px-4 py-3 transition-colors hover:border-cyan/40"
+                  className="panel flex items-center gap-3 px-4 py-3 transition-colors hover:border-teal/40"
                 >
                   {inner}
                 </a>
               ) : (
                 <div
                   key={c.label}
-                  className="panel flex items-center gap-3 rounded-2xl px-4 py-3"
+                  className="panel flex items-center gap-3 px-4 py-3"
                 >
                   {inner}
                 </div>
@@ -96,7 +96,7 @@ export function ContactSection({
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={s.label}
-                className="chip flex size-10 items-center justify-center !p-0 transition-colors hover:border-cyan/60 hover:text-ink"
+                className="chip flex size-10 items-center justify-center !p-0 transition-colors hover:border-teal/60 hover:text-ink"
               >
                 <s.icon className="size-4" aria-hidden />
               </a>

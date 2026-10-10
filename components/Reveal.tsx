@@ -4,8 +4,9 @@ import { useEffect, useRef, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * Adds `.is-visible` when the element scrolls into view.
- * Pure progressive enhancement — content is readable without JS.
+ * Toggles `.is-visible` while the element is in view — in both scroll
+ * directions. Pure progressive enhancement: content is readable
+ * without JS.
  */
 export function Reveal({
   children,
@@ -24,10 +25,7 @@ export function Reveal({
     const io = new IntersectionObserver(
       (entries) => {
         for (const e of entries) {
-          if (e.isIntersecting) {
-            el.classList.add("is-visible");
-            io.disconnect();
-          }
+          el.classList.toggle("is-visible", e.isIntersecting);
         }
       },
       { threshold: 0.15 },

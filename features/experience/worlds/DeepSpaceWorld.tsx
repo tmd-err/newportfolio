@@ -1,34 +1,34 @@
 "use client";
 
-import { Starfield, NebulaVeil, SpiralGalaxy, DustField } from "../props/Cosmos";
+import { Starfield, NebulaVeil, DustField, MeteorField } from "../props/Cosmos";
 
 /**
- * Act I — deep space. Layered starfields at different scales and depths,
- * enormous fbm nebula veils in restrained midnight/indigo tones, a slow
- * distant galaxy, and faint dust drifting through the travel corridor.
+ * The persistent void — layered starfields, vast restrained nebula
+ * veils at scattered depths, a distant galaxy, drifting dust along the
+ * winding route, and occasional fire meteors crossing the view.
  */
 export function DeepSpaceWorld() {
   return (
     <group>
       {/* star depth layers — different scales, densities, distances */}
-      <Starfield count={2600} radius={420} zMin={-720} zMax={-100} size={1.9} seed={1} />
-      <Starfield count={1800} radius={300} zMin={-500} zMax={-20} size={1.3} seed={7} />
-      <Starfield count={900} radius={200} zMin={-350} zMax={20} size={0.9} seed={13} />
+      <Starfield count={2600} radius={420} zMin={-820} zMax={-100} size={1.9} seed={1} />
+      <Starfield count={1800} radius={300} zMin={-560} zMax={-20} size={1.3} seed={7} />
+      <Starfield count={900} radius={200} zMin={-400} zMax={20} size={0.9} seed={13} />
 
-      {/* nebula veils — few, vast, restrained */}
+      {/* nebula veils — few, vast, scattered off the flight axis */}
       <NebulaVeil
-        position={[-90, 26, -340]}
-        rotation={[0, 0.3, 0.15]}
+        position={[-120, 30, -260]}
+        rotation={[0, 0.4, 0.15]}
         width={380}
         height={230}
         colorA="#0b1c3c"
         colorB="#241b48"
         seed={2}
-        opacity={0.5}
+        opacity={0.45}
       />
       <NebulaVeil
-        position={[70, -30, -420]}
-        rotation={[0, -0.4, -0.1]}
+        position={[110, -40, -360]}
+        rotation={[0, -0.5, -0.1]}
         width={320}
         height={200}
         colorA="#0a1633"
@@ -37,19 +37,19 @@ export function DeepSpaceWorld() {
         opacity={0.4}
       />
       <NebulaVeil
-        position={[-50, 40, -600]}
+        position={[-90, -50, -540]}
         rotation={[0.1, 0.5, 0.2]}
         width={400}
         height={260}
         colorA="#0c1f42"
         colorB="#2e2050"
         seed={9}
-        opacity={0.55}
+        opacity={0.5}
       />
       <NebulaVeil
-        position={[10, 14, -760]}
+        position={[30, 40, -830]}
         rotation={[0, 0, 0]}
-        width={500}
+        width={520}
         height={320}
         colorA="#0d2148"
         colorB="#33255c"
@@ -57,16 +57,12 @@ export function DeepSpaceWorld() {
         opacity={0.5}
       />
 
-      {/* a distant spiral galaxy — visible from the opening moments */}
-      <SpiralGalaxy
-        position={[-95, 62, -560]}
-        rotation={[0.95, 0.15, 0.4]}
-        radius={52}
-      />
+      {/* dust motes along the winding route */}
+      <DustField count={1000} zMin={-40} zMax={-740} spread={80} size={0.4} />
+      <DustField count={400} zMin={-100} zMax={-450} spread={40} size={0.6} seed={11} />
 
-      {/* dust motes in the corridor the camera flies through */}
-      <DustField count={1000} zMin={-40} zMax={-680} spread={70} size={0.4} />
-      <DustField count={400} zMin={-100} zMax={-400} spread={35} size={0.6} seed={11} />
+      {/* occasional amber meteors crossing from the screen edges */}
+      <MeteorField max={3} />
     </group>
   );
 }

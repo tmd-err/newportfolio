@@ -13,6 +13,17 @@ import type { Project } from "@/data/projects";
  * project stations that serve as interactive destinations.
  */
 
+function mulberry32(seed: number) {
+  let t = seed >>> 0;
+  return () => {
+    t += 0x6d2b79f5;
+    let x = t;
+    x = Math.imul(x ^ (x >>> 15), x | 1);
+    x ^= x + Math.imul(x ^ (x >>> 7), x | 61);
+    return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
 const NOISE_GLSL = /* glsl */ `
   float hash(vec2 p) {
     return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
@@ -96,13 +107,19 @@ export function Starfield({
     g.setAttribute("aTwinkle", new THREE.BufferAttribute(tw, 1));
     return {
       geometry: g,
-      uniforms: { uTime: { value: 0 } },
+      uniforms: {
+        uTime: { value: 0 },
+        uPointer: { value: new THREE.Vector2(10, 10) }, // off-screen
+      },
     };
   }, [count, radius, zMin, zMax, size, seed]);
 
   useFrame((state) => {
-    if (mat.current && !journey.reducedMotion) {
-      mat.current.uniforms.uTime.value = state.clock.elapsedTime;
+    if (mat.current) {
+      mat.current.uniforms.uPointer.value.set(journey.ndcX, journey.ndcY);
+      if (!journey.reducedMotion) {
+        mat.current.uniforms.uTime.value = state.clock.elapsedTime;
+      }
     }
   });
 
@@ -119,14 +136,25 @@ export function Starfield({
           attribute vec3 aColor;
           attribute float aTwinkle;
           uniform float uTime;
+          uniform vec2 uPointer;
           varying vec3 vColor;
           varying float vTw;
           void main() {
             vColor = aColor;
             vTw = aTwinkle;
             vec4 mv = modelViewMatrix * vec4(position, 1.0);
+            vec4 clip = projectionMatrix * mv;
+            vec2 ndc = clip.xy / clip.w;
+            // subtle local gravitational nudge + brighten near the pointer
+            vec2 d = ndc - uPointer;
+            float dist = length(d);
+            float f = exp(-dist * dist * 22.0);
+            vec2 push = f > 0.001 ? (d / max(dist, 1e-4)) * f * 0.028 : vec2(0.0);
+            ndc += push;
+            clip = vec4(ndc * clip.w, clip.z, clip.w);
+            vColor *= 1.0 + f * 0.7;
             gl_PointSize = aSize * (240.0 / -mv.z);
-            gl_Position = projectionMatrix * mv;
+            gl_Position = clip;
           }
         `}
         fragmentShader={/* glsl */ `
@@ -236,11 +264,28 @@ export function Planet({
   radius = 22,
   sunDir = [-0.55, 0.35, -0.75],
   seed = 3,
+  spin = 0.02,
+  palette,
 }: {
   position: [number, number, number];
   radius?: number;
   sunDir?: [number, number, number];
   seed?: number;
+  /** surface rotation speed rad/s — the surface spins, the light stays fixed */
+  spin?: number;
+  /** surface palette: [ocean, shallow, lowland, highland, ice, atmosphere] */
+  palette?: {
+    ocean: string;
+    shallow: string;
+    low: string;
+    high: string;
+    ice: string;
+    atmos: string;
+    /** 0..1 — higher = more land coverage */
+    landLevel?: number;
+    /** cloud coverage 0..1 */
+    clouds?: number;
+  };
 }) {
   const mat = useRef<THREE.ShaderMaterial>(null);
   const atmo = useRef<THREE.ShaderMaterial>(null);
@@ -249,8 +294,17 @@ export function Planet({
       uTime: { value: 0 },
       uSunDir: { value: new THREE.Vector3(...sunDir).normalize() },
       uSeed: { value: seed },
+      uSpin: { value: spin },
+      uOcean: { value: new THREE.Color(palette?.ocean ?? "#0a2138") },
+      uShallow: { value: new THREE.Color(palette?.shallow ?? "#1a3d4d") },
+      uLow: { value: new THREE.Color(palette?.low ?? "#1c3821") },
+      uHigh: { value: new THREE.Color(palette?.high ?? "#3d3830") },
+      uIce: { value: new THREE.Color(palette?.ice ?? "#bfD1e6") },
+      uAtmos: { value: new THREE.Color(palette?.atmos ?? "#4d8cd9") },
+      uLand: { value: palette?.landLevel ?? 0.51 },
+      uClouds: { value: palette?.clouds ?? 0.6 },
     }),
-    [sunDir, seed],
+    [sunDir, seed, spin, palette],
   );
   useFrame((state) => {
     if (journey.reducedMotion) return;
@@ -279,40 +333,51 @@ export function Planet({
             uniform float uTime;
             uniform vec3 uSunDir;
             uniform float uSeed;
+            uniform float uSpin;
+            uniform vec3 uOcean;
+            uniform vec3 uShallow;
+            uniform vec3 uLow;
+            uniform vec3 uHigh;
+            uniform vec3 uIce;
+            uniform vec3 uAtmos;
+            uniform float uLand;
+            uniform float uClouds;
             varying vec3 vNormal;
             varying vec3 vPos;
             void main() {
+              // slowly rotate the sampled domain — the world turns under fixed light
+              float ang = uTime * uSpin;
               vec3 nrm = normalize(vPos);
+              nrm = vec3(
+                cos(ang) * nrm.x - sin(ang) * nrm.z,
+                nrm.y,
+                sin(ang) * nrm.x + cos(ang) * nrm.z
+              );
               // continents from 3-axis fbm blend
               float c1 = fbm(nrm.xy * 2.2 + uSeed * 7.0);
               float c2 = fbm(nrm.yz * 2.2 + uSeed * 11.0);
               float c3 = fbm(nrm.zx * 2.2 + uSeed * 17.0);
-              float land = smoothstep(0.46, 0.56, (c1 + c2 + c3) / 3.0);
-              // palette: deep ocean → shallow → forest → rock
-              vec3 ocean = vec3(0.035, 0.13, 0.24);
-              vec3 shallow = vec3(0.10, 0.24, 0.30);
-              vec3 forest = vec3(0.11, 0.22, 0.13);
-              vec3 rock = vec3(0.24, 0.22, 0.19);
-              vec3 surf = mix(ocean, shallow, smoothstep(0.0, 0.35, land));
-              surf = mix(surf, forest, smoothstep(0.35, 0.7, land));
-              surf = mix(surf, rock, smoothstep(0.7, 1.0, land) * c2);
-              // polar ice
+              float land = smoothstep(uLand - 0.05, uLand + 0.05, (c1 + c2 + c3) / 3.0);
+              vec3 surf = mix(uOcean, uShallow, smoothstep(0.0, 0.35, land));
+              surf = mix(surf, uLow, smoothstep(0.35, 0.7, land));
+              surf = mix(surf, uHigh, smoothstep(0.7, 1.0, land) * c2);
+              // polar caps
               float ice = smoothstep(0.72, 0.85, abs(nrm.y));
-              surf = mix(surf, vec3(0.75, 0.82, 0.9), ice);
+              surf = mix(surf, uIce, ice);
               // drifting cloud bands
               float clouds = fbm(vec2(nrm.x * 3.0 + uTime * 0.008, nrm.y * 5.0) + uSeed);
-              clouds = smoothstep(0.55, 0.78, clouds);
+              clouds = smoothstep(0.55, 0.78, clouds) * uClouds;
               // day/night
               float day = clamp(dot(vNormal, uSunDir), 0.0, 1.0);
               float terminator = smoothstep(0.0, 0.35, day);
-              vec3 dayCol = surf * (0.25 + day * 1.15) + clouds * day * 0.55;
+              vec3 dayCol = surf * (0.3 + day * 1.35) + clouds * day * 0.5;
               // faint city speckle on the night side
               float speck = step(0.985, vnoise(nrm.xz * 90.0)) * land;
-              vec3 nightCol = surf * 0.05 + vec3(1.0, 0.75, 0.4) * speck * 0.5;
+              vec3 nightCol = surf * 0.06 + vec3(1.0, 0.75, 0.4) * speck * 0.4;
               vec3 col = mix(nightCol, dayCol, terminator);
-              // rim: thin atmosphere edge
+              // subtle atmosphere rim in the world's own color
               float rim = pow(1.0 - abs(dot(vNormal, vec3(0.0, 0.0, 1.0))), 3.0);
-              col += vec3(0.15, 0.35, 0.55) * rim * (0.3 + day);
+              col += uAtmos * rim * (0.12 + day * 0.35);
               gl_FragColor = vec4(col, 1.0);
             }
           `}
@@ -340,12 +405,13 @@ export function Planet({
           `}
           fragmentShader={/* glsl */ `
             uniform vec3 uSunDir;
+            uniform vec3 uAtmos;
             varying vec3 vNormal;
             varying vec3 vView;
             void main() {
               float f = pow(1.0 - abs(dot(vNormal, vView)), 3.2);
               float day = clamp(dot(vNormal, uSunDir) * 0.5 + 0.55, 0.12, 1.0);
-              gl_FragColor = vec4(vec3(0.30, 0.55, 0.85) * day, f * 0.85);
+              gl_FragColor = vec4(uAtmos * 0.8 * day, f * 0.6);
             }
           `}
         />
@@ -354,19 +420,255 @@ export function Planet({
   );
 }
 
-/** Quiet grey moon. */
+/** Quiet moon — procedural regolith, craters, a real terminator. */
 export function Moon({
   position,
   radius = 4,
+  sunDir = [-0.55, 0.35, -0.72],
+  seed = 8,
+  tint = [0.48, 0.48, 0.50],
+  spin = 0.008,
 }: {
   position: [number, number, number];
   radius?: number;
+  sunDir?: [number, number, number];
+  seed?: number;
+  /** surface albedo — pale blue-grey for ice, warm grey for rock */
+  tint?: [number, number, number];
+  spin?: number;
 }) {
+  const mat = useRef<THREE.ShaderMaterial>(null);
+  const uniforms = useMemo(
+    () => ({
+      uTime: { value: 0 },
+      uSunDir: { value: new THREE.Vector3(...sunDir).normalize() },
+      uSeed: { value: seed },
+      uTint: { value: new THREE.Vector3(...tint) },
+      uSpin: { value: spin },
+    }),
+    [sunDir, seed, tint, spin],
+  );
+  useFrame((state) => {
+    if (mat.current && !journey.reducedMotion) {
+      mat.current.uniforms.uTime.value = state.clock.elapsedTime;
+    }
+  });
   return (
     <mesh position={position}>
-      <sphereGeometry args={[radius, 32, 32]} />
-      <meshStandardMaterial color="#8a93a2" roughness={0.95} metalness={0.05} />
+      <sphereGeometry args={[radius, 48, 48]} />
+      <shaderMaterial
+        ref={mat}
+        uniforms={uniforms}
+        vertexShader={/* glsl */ `
+          varying vec3 vNormal;
+          varying vec3 vPos;
+          void main() {
+            vNormal = normalize(normalMatrix * normal);
+            vPos = position;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          }
+        `}
+        fragmentShader={/* glsl */ `
+          ${NOISE_GLSL}
+          uniform float uTime;
+          uniform vec3 uSunDir;
+          uniform float uSeed;
+          uniform vec3 uTint;
+          uniform float uSpin;
+          varying vec3 vNormal;
+          varying vec3 vPos;
+          void main() {
+            float ang = uTime * uSpin;
+            vec3 nrm = normalize(vPos);
+            nrm = vec3(
+              cos(ang) * nrm.x - sin(ang) * nrm.z,
+              nrm.y,
+              sin(ang) * nrm.x + cos(ang) * nrm.z
+            );
+            // regolith base tone
+            float rock = fbm(nrm.xy * 4.0 + nrm.zx * 3.2 + uSeed);
+            vec3 surf = mix(uTint * 0.62, uTint * 1.05, rock);
+            // craters — darkened bowls from thresholded noise at two scales
+            float c1 = smoothstep(0.70, 0.78, vnoise(nrm.xz * 16.0 + uSeed * 5.0));
+            float c2 = smoothstep(0.74, 0.80, vnoise(nrm.xy * 27.0 + uSeed * 9.0));
+            surf *= 1.0 - (c1 * 0.5 + c2 * 0.35);
+            // rim highlight on crater edges
+            float edge = smoothstep(0.68, 0.70, vnoise(nrm.xz * 16.0 + uSeed * 5.0)) - c1;
+            surf += vec3(0.10) * max(edge, 0.0);
+            float day = clamp(dot(vNormal, uSunDir), 0.0, 1.0);
+            float terminator = smoothstep(0.0, 0.18, day);
+            vec3 col = mix(surf * 0.06, surf * (0.3 + day * 1.35), terminator);
+            gl_FragColor = vec4(col, 1.0);
+          }
+        `}
+      />
     </mesh>
+  );
+}
+
+/** A dark volcanic body — emissive fissures in a charcoal crust. */
+export function VolcanicBody({
+  position,
+  radius = 9,
+  sunDir = [-0.55, 0.35, -0.72],
+  seed = 11,
+  spin = 0.012,
+}: {
+  position: [number, number, number];
+  radius?: number;
+  sunDir?: [number, number, number];
+  seed?: number;
+  spin?: number;
+}) {
+  const mat = useRef<THREE.ShaderMaterial>(null);
+  const uniforms = useMemo(
+    () => ({
+      uTime: { value: 0 },
+      uSunDir: { value: new THREE.Vector3(...sunDir).normalize() },
+      uSeed: { value: seed },
+      uSpin: { value: spin },
+    }),
+    [sunDir, seed, spin],
+  );
+  useFrame((state) => {
+    if (mat.current && !journey.reducedMotion) {
+      mat.current.uniforms.uTime.value = state.clock.elapsedTime;
+    }
+  });
+  return (
+    <mesh position={position}>
+      <sphereGeometry args={[radius, 48, 48]} />
+      <shaderMaterial
+        ref={mat}
+        uniforms={uniforms}
+        vertexShader={/* glsl */ `
+          varying vec3 vNormal;
+          varying vec3 vPos;
+          void main() {
+            vNormal = normalize(normalMatrix * normal);
+            vPos = position;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          }
+        `}
+        fragmentShader={/* glsl */ `
+          ${NOISE_GLSL}
+          uniform float uTime;
+          uniform vec3 uSunDir;
+          uniform float uSeed;
+          uniform float uSpin;
+          varying vec3 vNormal;
+          varying vec3 vPos;
+          void main() {
+            float ang = uTime * uSpin;
+            vec3 nrm = normalize(vPos);
+            nrm = vec3(
+              cos(ang) * nrm.x - sin(ang) * nrm.z,
+              nrm.y,
+              sin(ang) * nrm.x + cos(ang) * nrm.z
+            );
+            // charcoal basalt crust — warm grey so the lit side reads
+            float crust = fbm(nrm.xy * 5.0 + nrm.zx * 4.0 + uSeed);
+            vec3 surf = mix(vec3(0.06, 0.05, 0.045), vec3(0.17, 0.14, 0.12), crust);
+            // lava fissures — ridged noise channels
+            float rid = abs(fbm(nrm.xz * 4.5 + nrm.y * 3.0 + uSeed * 3.0) - 0.5) * 2.0;
+            float fiss = smoothstep(0.06, 0.0, rid);
+            float pulse = 0.75 + 0.25 * sin(uTime * 0.7 + crust * 8.0);
+            vec3 lava = vec3(0.85, 0.32, 0.08) * fiss * pulse;
+            float day = clamp(dot(vNormal, uSunDir), 0.0, 1.0);
+            float terminator = smoothstep(0.0, 0.3, day);
+            // lava glows on the night side too — that is the point
+            vec3 col = mix(surf * 0.08 + lava, surf * (0.35 + day * 1.1) + lava * 0.6, terminator);
+            gl_FragColor = vec4(col, 1.0);
+          }
+        `}
+      />
+    </mesh>
+  );
+}
+
+/** A banded gas giant — stripes, terminator, thin atmosphere rim. */
+export function GasGiant({
+  position,
+  radius = 14,
+  sunDir = [-0.5, 0.3, -0.8],
+  seed = 4,
+  spin = 0.03,
+}: {
+  position: [number, number, number];
+  radius?: number;
+  sunDir?: [number, number, number];
+  seed?: number;
+  spin?: number;
+}) {
+  const mat = useRef<THREE.ShaderMaterial>(null);
+  const uniforms = useMemo(
+    () => ({
+      uTime: { value: 0 },
+      uSunDir: { value: new THREE.Vector3(...sunDir).normalize() },
+      uSeed: { value: seed },
+      uSpin: { value: spin },
+    }),
+    [sunDir, seed, spin],
+  );
+  useFrame((state) => {
+    if (mat.current && !journey.reducedMotion) {
+      mat.current.uniforms.uTime.value = state.clock.elapsedTime;
+    }
+  });
+  return (
+    <group position={position}>
+      <mesh>
+        <sphereGeometry args={[radius, 56, 56]} />
+        <shaderMaterial
+          ref={mat}
+          uniforms={uniforms}
+          vertexShader={/* glsl */ `
+            varying vec3 vNormal;
+            varying vec3 vPos;
+            void main() {
+              vNormal = normalize(normalMatrix * normal);
+              vPos = position;
+              gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+          `}
+          fragmentShader={/* glsl */ `
+            ${NOISE_GLSL}
+            uniform float uTime;
+            uniform vec3 uSunDir;
+            uniform float uSeed;
+            uniform float uSpin;
+            varying vec3 vNormal;
+            varying vec3 vPos;
+            void main() {
+              float ang = uTime * uSpin;
+              vec3 nrm = normalize(vPos);
+              nrm = vec3(
+                cos(ang) * nrm.x - sin(ang) * nrm.z,
+                nrm.y,
+                sin(ang) * nrm.x + cos(ang) * nrm.z
+              );
+              // horizontal storm bands — cream, ochre, muted brown
+              float wob = fbm(vec2(nrm.x * 3.0, nrm.z * 3.0) + uSeed) * 0.6;
+              float band = fbm(vec2((nrm.y + wob) * 6.5, uSeed));
+              vec3 cream = vec3(0.55, 0.50, 0.40);
+              vec3 ochre = vec3(0.45, 0.33, 0.20);
+              vec3 brown = vec3(0.26, 0.19, 0.13);
+              vec3 surf = mix(brown, cream, smoothstep(0.25, 0.6, band));
+              surf = mix(surf, ochre, smoothstep(0.6, 0.85, band) * 0.8);
+              // pale equatorial band
+              surf += vec3(0.14, 0.12, 0.09) * smoothstep(0.12, 0.0, abs(nrm.y + wob * 0.3));
+              float day = clamp(dot(vNormal, uSunDir), 0.0, 1.0);
+              float terminator = smoothstep(0.0, 0.3, day);
+              vec3 col = mix(surf * 0.06, surf * (0.4 + day * 1.3), terminator);
+              // subtle warm atmosphere rim
+              float rim = pow(1.0 - abs(dot(vNormal, vec3(0.0, 0.0, 1.0))), 3.5);
+              col += vec3(0.35, 0.30, 0.22) * rim * (0.15 + day * 0.5);
+              gl_FragColor = vec4(col, 1.0);
+            }
+          `}
+        />
+      </mesh>
+    </group>
   );
 }
 
@@ -428,68 +730,117 @@ export function RingSystem({
   );
 }
 
-/** A distant spiral galaxy — instanced points in logarithmic arms. */
-export function SpiralGalaxy({
-  position,
-  rotation = [0.9, 0.2, 0.3],
-  radius = 55,
-  count = 2400,
-  arms = 2,
-}: {
-  position: [number, number, number];
-  rotation?: [number, number, number];
-  radius?: number;
-  count?: number;
-  arms?: number;
-}) {
-  const group = useRef<THREE.Group>(null);
-  const geometry = useMemo(() => {
-    const n = journey.lowQuality ? count / 2 : count;
-    const pos = new Float32Array(n * 3);
-    const col = new Float32Array(n * 3);
-    for (let i = 0; i < n; i++) {
-      const arm = i % arms;
-      const t = Math.pow((i / n) * 0.9 + ((i * 37) % 10) / 100, 0.72);
-      const angle = t * 4.6 + (arm * Math.PI * 2) / arms;
-      const r = t * radius;
-      const spread = (1 - t) * 3.2 + 0.8;
-      const rx = Math.sin(i * 12.9898) * 0.5 - 0.25;
-      pos[i * 3] = Math.cos(angle) * r + rx * spread * 2;
-      pos[i * 3 + 1] = Math.sin(i * 78.233) * spread * 0.35;
-      pos[i * 3 + 2] = Math.sin(angle) * r + rx * spread;
-      const heat = 1 - t;
-      col[i * 3] = 0.55 + heat * 0.45;
-      col[i * 3 + 1] = 0.55 + heat * 0.35;
-      col[i * 3 + 2] = 0.85 + heat * 0.15;
-    }
-    const g = new THREE.BufferGeometry();
-    g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
-    g.setAttribute("color", new THREE.BufferAttribute(col, 3));
-    return g;
-  }, [count, radius, arms]);
+/**
+ * Occasional fire meteors — bright heads with short tapered amber trails
+ * that enter from the far left/right of the camera's current view.
+ * Sparse, irregular, GPU-light: one additive streak plane per meteor.
+ */
+export function MeteorField({ max = 3 }: { max?: number }) {
+  const streakTex = useMemo(() => {
+    const c = document.createElement("canvas");
+    c.width = 64; c.height = 8;
+    const ctx = c.getContext("2d")!;
+    const g = ctx.createLinearGradient(0, 0, 64, 0);
+    g.addColorStop(0, "rgba(255,244,220,1)");
+    g.addColorStop(0.15, "rgba(255,196,120,0.9)");
+    g.addColorStop(0.5, "rgba(220,120,50,0.45)");
+    g.addColorStop(1, "rgba(140,60,20,0)");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, 64, 8);
+    return new THREE.CanvasTexture(c);
+  }, []);
 
-  useFrame((_, delta) => {
-    if (group.current && !journey.reducedMotion) {
-      group.current.rotation.z += delta * 0.008;
+  // runtime state lives outside render — initialized lazily in useFrame
+  const meshes = useRef<Array<THREE.Mesh | null>>([]);
+  const meteors = useRef<Array<{
+    rng: () => number;
+    active: boolean;
+    pos: THREE.Vector3;
+    vel: THREE.Vector3;
+    life: number;
+    lifeSpan: number;
+    cooldown: number;
+  }>>([]);
+
+  useFrame((state, dt) => {
+    if (journey.reducedMotion) return;
+    if (meteors.current.length === 0) {
+      const rng = mulberry32(777);
+      for (let i = 0; i < max; i++) {
+        meteors.current.push({
+          rng,
+          active: false,
+          pos: new THREE.Vector3(),
+          vel: new THREE.Vector3(),
+          life: 0,
+          lifeSpan: 1,
+          cooldown: rng() * 8,
+        });
+      }
+    }
+    const camPos = state.camera.position;
+    for (let i = 0; i < meteors.current.length; i++) {
+      const m = meteors.current[i];
+      const mesh = meshes.current[i];
+      if (!mesh) continue;
+      if (!m.active) {
+        m.cooldown -= dt;
+        if (m.cooldown > 0) continue;
+        const side = m.rng() < 0.5 ? -1 : 1;
+        const depth = 60 + m.rng() * 140;
+        m.pos.set(
+          camPos.x + side * (70 + m.rng() * 40),
+          camPos.y + (m.rng() - 0.5) * 50,
+          camPos.z - depth,
+        );
+        const speed = 55 + m.rng() * 45;
+        m.vel.set(-side * speed, (m.rng() - 0.5) * 18, (m.rng() - 0.5) * 10);
+        m.lifeSpan = 1.6 + m.rng() * 1.3;
+        m.life = m.lifeSpan;
+        m.active = true;
+        mesh.visible = true;
+        mesh.position.copy(m.pos);
+        mesh.quaternion.setFromUnitVectors(
+          new THREE.Vector3(1, 0, 0),
+          m.vel.clone().normalize(),
+        );
+        continue;
+      }
+      m.life -= dt;
+      m.pos.addScaledVector(m.vel, dt);
+      mesh.position.copy(m.pos);
+      const fade = Math.min(1, m.life / (m.lifeSpan * 0.35));
+      const mat = mesh.material as THREE.MeshBasicMaterial;
+      mat.opacity = fade;
+      if (m.life <= 0) {
+        m.active = false;
+        mesh.visible = false;
+        m.cooldown = 4 + m.rng() * 14;
+      }
     }
   });
 
   return (
-    <group position={position} rotation={rotation}>
-      <group ref={group}>
-        <points geometry={geometry} frustumCulled={false}>
-          <pointsMaterial
-            size={0.5}
-            vertexColors
+    <group frustumCulled={false}>
+      {Array.from({ length: max }, (_, i) => (
+        <mesh
+          key={i}
+          ref={(el) => { meshes.current[i] = el; }}
+          visible={false}
+          renderOrder={5}
+        >
+          <planeGeometry args={[14, 0.28]} />
+          <meshBasicMaterial
+            map={streakTex}
             transparent
-            opacity={0.85}
+            opacity={0}
             depthWrite={false}
             blending={THREE.AdditiveBlending}
-            sizeAttenuation
+            side={THREE.DoubleSide}
             fog={false}
           />
-        </points>
-      </group>
+        </mesh>
+      ))}
     </group>
   );
 }
@@ -674,9 +1025,11 @@ export function DustField({
     <points geometry={geometry} frustumCulled={false}>
       <pointsMaterial
         size={size}
-        color="#5a7aa8"
+        color="#6a7a8e"
+        map={getGlowTexture()}
+        alphaTest={0.02}
         transparent
-        opacity={0.5}
+        opacity={0.4}
         depthWrite={false}
         blending={THREE.AdditiveBlending}
         sizeAttenuation
@@ -686,82 +1039,35 @@ export function DustField({
   );
 }
 
-/** Scattered rocky debris — instanced low-poly rocks. */
-export function DebrisField({
-  center,
-  count = 140,
-  spread = 40,
-  seed = 9,
-}: {
-  center: [number, number, number];
-  count?: number;
-  spread?: number;
-  seed?: number;
-}) {
-  const ref = useRef<THREE.InstancedMesh>(null);
-  const group = useRef<THREE.Group>(null);
-  useEffect(() => {
-    const mesh = ref.current;
-    if (!mesh) return;
-    const m = new THREE.Matrix4();
-    const q = new THREE.Quaternion();
-    const e = new THREE.Euler();
-    const s = new THREE.Vector3();
-    for (let i = 0; i < count; i++) {
-      const r = (k: number) => {
-        const v = Math.sin(i * 157.1 + k * 91.3 + seed) * 43758.5453;
-        return v - Math.floor(v) - 0.5;
-      };
-      e.set(r(1) * Math.PI, r(2) * Math.PI, r(3) * Math.PI);
-      q.setFromEuler(e);
-      const sc = 0.3 + Math.abs(r(4)) * 1.6;
-      s.set(sc, sc * (0.7 + Math.abs(r(5))), sc);
-      m.compose(new THREE.Vector3(r(6) * spread, r(7) * spread * 0.5, r(8) * spread), q, s);
-      mesh.setMatrixAt(i, m);
-    }
-    mesh.instanceMatrix.needsUpdate = true;
-  }, [count, spread, seed]);
 
-  useFrame((state, delta) => {
-    if (group.current && !journey.reducedMotion) {
-      group.current.rotation.y += delta * 0.01;
-    }
-  });
 
-  return (
-    <group position={center}>
-      <group ref={group}>
-        <instancedMesh ref={ref} args={[undefined, undefined, count]} frustumCulled={false}>
-          <dodecahedronGeometry args={[1, 0]} />
-          <meshStandardMaterial color="#3a4250" roughness={0.9} metalness={0.2} />
-        </instancedMesh>
-      </group>
-    </group>
-  );
-}
-
-/* ── Project station ────────────────────────────────────────────── */
+/* ── Project orb ────────────────────────────────────────────────── */
 
 /**
- * A project destination: a small station — beveled core, service ring,
- * antenna mast and an accent beacon. Registers as a journey
- * interactable: hover → accent light swells + DOM chip; click opens
+ * A project destination: a small artificial celestial body — a dark
+ * core wrapped in a translucent atmospheric shell, crossed by one
+ * thin inclined orbit ring carrying a tiny moonlet. An emissive
+ * meridian seam glows in the project's accent. Registers as a journey
+ * interactable: hover → shell brightens, orbit tilts open; click →
  * the project page.
  */
-export function ProjectStation({
+export function ProjectOrb({
   project,
   position,
-  rotationY = 0,
+  tilt = 0.5,
 }: {
   project: Project;
   position: [number, number, number];
-  rotationY?: number;
+  /** inclination of the orbit ring */
+  tilt?: number;
 }) {
   const root = useRef<THREE.Group>(null);
   const spin = useRef<THREE.Group>(null);
+  const moonlet = useRef<THREE.Group>(null);
   const lift = useRef(0);
   const accentLight = useRef<THREE.PointLight>(null);
-  const beacon = useRef<THREE.MeshBasicMaterial>(null);
+  const shell = useRef<THREE.MeshStandardMaterial>(null);
+  const seam = useRef<THREE.MeshBasicMaterial>(null);
 
   useEffect(() => {
     const obj = root.current;
@@ -776,77 +1082,87 @@ export function ProjectStation({
   useFrame((state, delta) => {
     const hovered = journey.hoveredSlug === project.slug;
     lift.current = THREE.MathUtils.damp(lift.current, hovered ? 1 : 0, 6, delta);
-    if (accentLight.current) accentLight.current.intensity = 3 + lift.current * 14;
-    if (beacon.current) {
-      beacon.current.opacity =
-        0.55 + Math.sin(state.clock.elapsedTime * 2.4) * 0.25 + lift.current * 0.2;
+    if (accentLight.current) accentLight.current.intensity = 2 + lift.current * 10;
+    if (shell.current) shell.current.opacity = 0.14 + lift.current * 0.2;
+    if (seam.current) {
+      seam.current.opacity =
+        0.4 + Math.sin(state.clock.elapsedTime * 1.8) * 0.15 + lift.current * 0.35;
+    }
+    if (moonlet.current && !journey.reducedMotion) {
+      moonlet.current.rotation.z += delta * 0.35;
     }
     if (spin.current && !journey.reducedMotion) {
-      spin.current.rotation.y += delta * 0.25;
+      spin.current.rotation.y += delta * 0.12;
     }
     if (root.current) {
-      const s = 1 + lift.current * 0.08;
-      root.current.scale.setScalar(s);
+      root.current.scale.setScalar(1 + lift.current * 0.06);
     }
   });
 
   return (
-    <group position={position} rotation={[0, rotationY, 0]}>
+    <group position={position}>
       <group ref={root}>
         <group ref={spin}>
-          {/* central hub */}
-          <mesh castShadow>
-            <octahedronGeometry args={[0.9, 0]} />
-            <meshStandardMaterial color="#28344a" roughness={0.4} metalness={0.8} />
+          {/* dark core sphere */}
+          <mesh>
+            <sphereGeometry args={[1.1, 40, 40]} />
+            <meshStandardMaterial
+              color="#14161a"
+              roughness={0.55}
+              metalness={0.5}
+            />
           </mesh>
-          {/* service ring */}
-          <mesh rotation={[Math.PI / 2, 0, 0]}>
-            <torusGeometry args={[1.5, 0.09, 8, 40]} />
-            <meshStandardMaterial color="#3a4a66" roughness={0.35} metalness={0.8} />
+          {/* translucent atmospheric shell — edge-lit */}
+          <mesh>
+            <sphereGeometry args={[1.32, 40, 40]} />
+            <meshStandardMaterial
+              ref={shell}
+              color="#20242c"
+              transparent
+              opacity={0.14}
+              roughness={0.15}
+              metalness={0.2}
+              depthWrite={false}
+            />
           </mesh>
-          {/* accent nodes on the ring */}
-          {[0, 1, 2].map((i) => {
-            const a = (i * Math.PI * 2) / 3;
-            return (
-              <mesh key={i} position={[Math.cos(a) * 1.5, 0, Math.sin(a) * 1.5]}>
-                <sphereGeometry args={[0.09, 8, 8]} />
-                <meshBasicMaterial color={project.accent} toneMapped={false} />
-              </mesh>
-            );
-          })}
+          {/* emissive meridian seam — the data marking */}
+          <mesh rotation={[0, 0, 0.35]}>
+            <torusGeometry args={[1.115, 0.006, 6, 72]} />
+            <meshBasicMaterial
+              ref={seam}
+              color={project.accent}
+              transparent
+              opacity={0.4}
+              toneMapped={false}
+            />
+          </mesh>
         </group>
-        {/* antenna mast */}
-        <mesh position={[0, 1.35, 0]}>
-          <cylinderGeometry args={[0.03, 0.05, 1.2, 6]} />
-          <meshStandardMaterial color="#46587a" roughness={0.4} metalness={0.8} />
-        </mesh>
-        <mesh position={[0, 2, 0]}>
-          <sphereGeometry args={[0.1, 10, 10]} />
-          <meshBasicMaterial
-            ref={beacon}
-            color={project.accent}
-            toneMapped={false}
-            transparent
-          />
-        </mesh>
-        {/* faint identification halo */}
-        <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, -0.02, 0]}>
-          <ringGeometry args={[2.0, 2.06, 48]} />
-          <meshBasicMaterial
-            color={project.accent}
-            transparent
-            opacity={0.35}
-            toneMapped={false}
-            side={THREE.DoubleSide}
-          />
-        </mesh>
+        {/* inclined orbit ring + moonlet crossing in front and behind */}
+        <group rotation={[tilt, 0, 0]}>
+          <mesh rotation={[Math.PI / 2, 0, 0]}>
+            <ringGeometry args={[1.9, 1.92, 96]} />
+            <meshBasicMaterial
+              color="#9a968c"
+              transparent
+              opacity={0.35}
+              toneMapped={false}
+              side={THREE.DoubleSide}
+            />
+          </mesh>
+          <group ref={moonlet} rotation={[Math.PI / 2, 0, 0]}>
+            <mesh position={[1.91, 0, 0]}>
+              <sphereGeometry args={[0.09, 10, 10]} />
+              <meshBasicMaterial color={project.accent} toneMapped={false} />
+            </mesh>
+          </group>
+        </group>
       </group>
       <pointLight
         ref={accentLight}
         color={project.accent}
-        intensity={3}
-        distance={10}
-        position={[0, 0.5, 0]}
+        intensity={2}
+        distance={9}
+        position={[0, 0.4, 0]}
       />
     </group>
   );

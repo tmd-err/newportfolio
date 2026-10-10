@@ -9,7 +9,7 @@ export function AboutSection({ dict }: { dict: Dictionary }) {
       vh={220}
       innerClassName="justify-end rtl:justify-start"
     >
-      <Reveal className="panel w-full max-w-xl rounded-3xl p-7 sm:p-9">
+      <Reveal className="panel w-full max-w-xl p-7 sm:p-9">
         <p className="kicker">{dict.about.label}</p>
         <h2 className="font-display mt-3 text-3xl font-bold leading-tight text-ink sm:text-4xl">
           {dict.about.heading}

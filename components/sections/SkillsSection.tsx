@@ -20,7 +20,7 @@ export function SkillsSection({ dict }: { dict: Dictionary }) {
         <div className="mt-9 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {skillGroups.map((g, i) => (
             <Reveal key={g.id} delay={i * 70}>
-              <div className="panel h-full rounded-2xl p-5">
+              <div className="panel h-full p-5">
                 <div className="flex items-center gap-2.5">
                   <span
                     className="size-2 rounded-full"

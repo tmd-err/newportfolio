@@ -54,7 +54,7 @@ export function SiteHeader({
           href={`/${locale}`}
           className="font-display text-lg font-bold tracking-tight text-ink"
         >
-          YT<span className="text-cyan">.</span>
+          YT<span className="text-mineral">.</span>
           <span className="sr-only">{profile.name}</span>
         </Link>
 
@@ -100,7 +100,7 @@ export function SiteHeader({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -12 }}
             transition={{ duration: 0.22, ease: "easeOut" }}
-            className="panel mx-4 mb-4 flex flex-col gap-1 rounded-2xl p-3 lg:hidden"
+            className="panel mx-4 mb-4 flex flex-col gap-1 p-3 lg:hidden"
             aria-label="Mobile"
           >
             {NAV_IDS.map((id) => (
@@ -108,7 +108,7 @@ export function SiteHeader({
                 key={id}
                 href={`#${id}`}
                 onClick={() => setOpen(false)}
-                className="rounded-xl px-4 py-3 text-base font-medium text-ink transition-colors hover:bg-white/5"
+                className="rounded px-4 py-3 text-base font-medium text-ink transition-colors hover:bg-white/5"
               >
                 {labels[id]}
               </a>
@@ -118,7 +118,7 @@ export function SiteHeader({
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => setOpen(false)}
-              className="mt-1 flex items-center gap-2 rounded-xl bg-cyan/15 px-4 py-3 text-base font-medium text-cyan"
+              className="mt-1 flex items-center gap-2 rounded bg-teal/15 px-4 py-3 text-base font-medium text-mineral"
             >
               <FileDown className="size-4" aria-hidden />
               {dict.nav.downloadCv}

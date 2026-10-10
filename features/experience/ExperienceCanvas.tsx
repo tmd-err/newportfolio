@@ -11,10 +11,11 @@ import { SystemWorld } from "./worlds/SystemWorld";
 import { journey } from "./journey-store";
 
 /**
- * One continuous journey through deep space:
- *   open void 0 → planetary approach -50…-215 → five project stations
- *   -250…-450 → ringed planet + system star -480…-530 → quiet drift
- *   → the luminous destination star and its accretion disc at -645.
+ * One continuous journey through a scattered universe:
+ *   open void 0 → rust planet -180 → icy moon -360 → volcanic -480
+ *   → teal world -640 / ringed giant -620 → luminous star + disc -830.
+ * Destinations sit far apart in every axis; the camera travels between
+ * them rather than zooming a centered object.
  */
 export default function ExperienceCanvas() {
   return (
@@ -31,7 +32,7 @@ export default function ExperienceCanvas() {
         gl.toneMappingExposure = 1.0;
       }}
     >
-      <fog attach="fog" args={["#04060d", 80, 420]} />
+      <fog attach="fog" args={["#08090c", 200, 1400]} />
 
       {/* procedural env map (local, no network) for metallic surfaces */}
       <Environment resolution={64} frames={1}>

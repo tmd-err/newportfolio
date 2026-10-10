@@ -36,7 +36,7 @@ export function LanguageSwitcher({
         aria-label={label}
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        className="chip flex items-center gap-1.5 px-3 py-1.5 hover:border-cyan/60 hover:text-ink transition-colors"
+        className="chip flex items-center gap-1.5 px-3 py-1.5 hover:border-teal/60 hover:text-ink transition-colors"
       >
         <Globe className="size-3.5" aria-hidden />
         <span className="uppercase">{locale}</span>
@@ -52,7 +52,7 @@ export function LanguageSwitcher({
               lang={l}
               className={`rounded-lg px-3 py-2 text-sm transition-colors ${
                 l === locale
-                  ? "bg-cyan/15 text-ink"
+                  ? "bg-teal/15 text-ink"
                   : "text-mist hover:bg-white/5 hover:text-ink"
               }`}
             >

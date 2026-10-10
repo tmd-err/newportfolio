@@ -26,10 +26,10 @@ export function ContactForm({ dict }: { dict: Dictionary }) {
   };
 
   const inputCls =
-    "w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-ink placeholder:text-dim outline-none transition-colors focus:border-cyan/60";
+    "w-full rounded border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-ink placeholder:text-dim outline-none transition-colors focus:border-teal/60";
 
   return (
-    <form onSubmit={submit} className="panel rounded-3xl p-6 sm:p-7">
+    <form onSubmit={submit} className="panel p-6 sm:p-7">
       <h3 className="font-display text-lg font-bold text-ink">
         {dict.contact.formTitle}
       </h3>

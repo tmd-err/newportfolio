@@ -81,7 +81,7 @@ export function ProgressRail({
           <span className="relative block h-6 w-[3px] overflow-hidden rounded-full bg-white/15">
             <span
               data-fill
-              className="absolute inset-0 origin-top rounded-full bg-cyan transition-transform duration-150 group-data-[active=true]:bg-cyan"
+              className="absolute inset-0 origin-top rounded-full bg-teal transition-transform duration-150 group-data-[active=true]:bg-teal"
               style={{ transform: "scaleY(0)" }}
             />
           </span>

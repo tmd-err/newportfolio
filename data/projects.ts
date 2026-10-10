@@ -35,8 +35,8 @@ export const projects: Project[] = [
   {
     slug: "edtech",
     featured: true,
-    accent: "#38bdf8",
-    accentSoft: "#0ea5e9",
+    accent: "#b0653f", // rust — the rocky world
+    accentSoft: "#7a4a33",
     scene: "panels",
     stack: ["Next.js", "Laravel", "PostgreSQL", "REST API"],
     links: { github: "https://github.com/tmd-err/EdTech" },
@@ -44,8 +44,8 @@ export const projects: Project[] = [
   {
     slug: "crafthub",
     featured: true,
-    accent: "#fb923c",
-    accentSoft: "#f59e0b",
+    accent: "#a9bcc4", // pale ice — the mineral moon
+    accentSoft: "#7d96a2",
     scene: "market",
     stack: ["MongoDB", "Express", "React", "Node.js", "Docker"],
     links: { github: "https://github.com/tmd-err/Crafthub" },
@@ -53,8 +53,8 @@ export const projects: Project[] = [
   {
     slug: "velora",
     featured: true,
-    accent: "#c084fc",
-    accentSoft: "#a855f7",
+    accent: "#d07840", // ember — the volcanic body
+    accentSoft: "#9a5230",
     scene: "luxury",
     stack: ["React", "Next.js", "Tailwind CSS"],
     links: { github: "https://github.com/tmd-err/Velora" },
@@ -62,8 +62,8 @@ export const projects: Project[] = [
   {
     slug: "autotrack",
     featured: true,
-    accent: "#34d399",
-    accentSoft: "#10b981",
+    accent: "#c8b288", // ochre — the ringed giant
+    accentSoft: "#97835f",
     scene: "network",
     stack: ["Laravel", "MySQL", "PHPUnit"],
     links: { github: "https://github.com/tmd-err/Autotrack" },
@@ -71,8 +71,8 @@ export const projects: Project[] = [
   {
     slug: "facedetector",
     featured: true,
-    accent: "#818cf8",
-    accentSoft: "#6366f1",
+    accent: "#5f9ba0", // teal — the ocean world
+    accentSoft: "#447a80",
     scene: "scanner",
     stack: ["Python", "OpenCV", "TensorFlow", "DeepFace"],
     links: { github: "https://github.com/tmd-err/FaceDetector" },
@@ -80,8 +80,8 @@ export const projects: Project[] = [
   {
     slug: "scholvia",
     featured: false,
-    accent: "#fbbf24",
-    accentSoft: "#f59e0b",
+    accent: "#8a8f96",
+    accentSoft: "#666c73",
     scene: "panels",
     stack: ["WordPress"],
     links: { private: true },
@@ -89,8 +89,8 @@ export const projects: Project[] = [
   {
     slug: "autonova",
     featured: false,
-    accent: "#f87171",
-    accentSoft: "#ef4444",
+    accent: "#6f8790",
+    accentSoft: "#52666e",
     scene: "market",
     stack: ["React", "Laravel"],
     links: { private: true },

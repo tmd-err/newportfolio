@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import {
+  Fraunces,
   Geist,
   Geist_Mono,
   IBM_Plex_Sans_Arabic,
-  Space_Grotesk,
 } from "next/font/google";
 import { locale as getLocaleParam } from "next/root-params";
 import "../globals.css";
@@ -22,10 +22,9 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
-const spaceGrotesk = Space_Grotesk({
-  variable: "--font-space-grotesk",
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
 });
 const plexArabic = IBM_Plex_Sans_Arabic({
   variable: "--font-plex-arabic",
@@ -81,7 +80,7 @@ export default async function RootLayout({
     <html
       lang={locale}
       dir={localeDir(locale)}
-      className={`${geistSans.variable} ${geistMono.variable} ${spaceGrotesk.variable} ${plexArabic.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} ${plexArabic.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <body className="grain min-h-full bg-abyss font-sans text-ink">
@@ -90,7 +89,7 @@ export default async function RootLayout({
         </noscript>
         <a
           href="#content"
-          className="sr-only focus:not-sr-only focus:fixed focus:start-4 focus:top-4 focus:z-[80] focus:rounded-lg focus:bg-cyan focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-abyss"
+          className="sr-only focus:not-sr-only focus:fixed focus:start-4 focus:top-4 focus:z-[80] focus:rounded-lg focus:bg-teal focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-abyss"
         >
           {dict.a11y.skipToContent}
         </a>

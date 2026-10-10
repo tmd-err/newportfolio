@@ -13,7 +13,7 @@ export default async function NotFound() {
       className="relative z-10 flex min-h-svh flex-col items-center justify-center px-6 text-center"
       style={{
         background:
-          "radial-gradient(60% 50% at 50% 30%, rgba(56,189,248,.12), transparent 65%), #050816",
+          "radial-gradient(60% 50% at 50% 30%, rgba(113,138,154,.10), transparent 65%), #090a0c",
       }}
     >
       <p className="kicker">404</p>

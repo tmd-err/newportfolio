@@ -7,14 +7,14 @@ import { SceneSection } from "./SectionShell";
 export function CvSection({ dict }: { dict: Dictionary }) {
   return (
     <SceneSection id="cv" vh={180} innerClassName="justify-center">
-      <Reveal className="panel relative w-full max-w-xl overflow-hidden rounded-3xl p-8 text-center sm:p-10">
+      <Reveal className="panel relative w-full max-w-xl overflow-hidden p-8 text-center sm:p-10">
         {/* portal glow */}
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0"
           style={{
             background:
-              "radial-gradient(50% 60% at 50% 0%, rgba(251,191,36,.14), transparent 70%)",
+              "radial-gradient(50% 60% at 50% 0%, rgba(183,121,85,.12), transparent 70%)",
           }}
         />
         <p className="kicker relative">{dict.cv.label}</p>

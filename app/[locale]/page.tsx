@@ -15,12 +15,15 @@ import { CvSection } from "@/components/sections/CvSection";
 import { ContactSection } from "@/components/sections/ContactSection";
 import { SiteFooter } from "@/components/sections/SiteFooter";
 
-const PROJECT_SIDES: Record<string, "left" | "right"> = {
-  edtech: "left",
-  crafthub: "right",
-  velora: "left",
-  autotrack: "right",
-  facedetector: "left",
+const PROJECT_SIDES: Record<
+  string,
+  { side: "left" | "right"; valign: "top" | "center" | "bottom" }
+> = {
+  edtech: { side: "right", valign: "center" },
+  crafthub: { side: "left", valign: "bottom" },
+  velora: { side: "right", valign: "top" },
+  autotrack: { side: "left", valign: "bottom" },
+  facedetector: { side: "right", valign: "center" },
 };
 
 export default function Page({ params }: PageProps<"/[locale]">) {
@@ -62,7 +65,8 @@ async function Journey({ params }: { params: Promise<{ locale: string }> }) {
             project={p}
             dict={dict}
             locale={locale}
-            side={PROJECT_SIDES[p.slug] ?? "left"}
+            side={PROJECT_SIDES[p.slug]?.side ?? "left"}
+            valign={PROJECT_SIDES[p.slug]?.valign ?? "center"}
             index={i}
           />
         ))}

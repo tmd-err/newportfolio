@@ -31,7 +31,7 @@ export function SupportingProjectsSection({
               <Reveal key={p.slug} delay={i * 100}>
                 <Link
                   href={`/${locale}/projects/${p.slug}`}
-                  className="panel group flex h-full flex-col rounded-2xl p-6 transition-transform duration-300 hover:-translate-y-1"
+                  className="panel group flex h-full flex-col p-6 transition-transform duration-300 hover:-translate-y-1"
                 >
                   <div className="flex items-center justify-between">
                     <span
@@ -63,7 +63,7 @@ export function SupportingProjectsSection({
                       ))}
                     </div>
                     <ArrowRight
-                      className="size-4 shrink-0 text-dim transition-transform group-hover:translate-x-1 group-hover:text-cyan rtl:-scale-x-100 rtl:group-hover:-translate-x-1"
+                      className="size-4 shrink-0 text-dim transition-transform group-hover:translate-x-1 group-hover:text-mineral rtl:-scale-x-100 rtl:group-hover:-translate-x-1"
                       aria-hidden
                     />
                   </div>

@@ -7,6 +7,7 @@ import { GithubIcon } from "@/components/ui/BrandIcons";
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
 import { getProject, projects } from "@/data/projects";
 import type { ProjectSlug } from "@/data/projects";
+import { ProjectBackdrop } from "@/components/ProjectBackdrop";
 
 export function generateStaticParams() {
   return projects.map((p) => ({ slug: p.slug }));
@@ -63,13 +64,11 @@ async function ProjectDetail({
 
   return (
     <main id="content" className="relative z-10 min-h-svh">
-      {/* ambient backdrop — CSS stands in for the 3D scene here */}
-      <div
-        aria-hidden
-        className="pointer-events-none fixed inset-0 -z-10"
-        style={{
-          background: `radial-gradient(55% 45% at 75% 15%, ${project.accent}22, transparent 65%), radial-gradient(40% 35% at 15% 80%, ${project.accentSoft}14, transparent 60%), #050816`,
-        }}
+      {/* this project's own sky — its celestial body drifts behind the copy */}
+      <ProjectBackdrop
+        slug={project.slug}
+        accent={project.accent}
+        accentSoft={project.accentSoft}
       />
 
       <div className="mx-auto max-w-5xl px-5 pb-24 pt-28 sm:px-10">
@@ -123,7 +122,7 @@ async function ProjectDetail({
               {copy.features.map((f) => (
                 <li
                   key={f}
-                  className="panel flex items-center gap-2.5 rounded-xl px-4 py-3 text-sm text-ink"
+                  className="panel flex items-center gap-2.5 rounded px-4 py-3 text-sm text-ink"
                 >
                   <span
                     className="size-1.5 rounded-full"
@@ -164,9 +163,9 @@ async function ProjectDetail({
                     href={project.links.github}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="panel flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-ink transition-colors hover:border-cyan/40"
+                    className="panel flex items-center gap-3 rounded px-4 py-3 text-sm font-medium text-ink transition-colors hover:border-teal/40"
                   >
-                    <GithubIcon className="size-4 text-cyan" />
+                    <GithubIcon className="size-4 text-mineral" />
                     {dict.projectPage.github}
                     <ArrowUpRight className="ms-auto size-4 text-dim" aria-hidden />
                   </a>
@@ -176,15 +175,15 @@ async function ProjectDetail({
                     href={project.links.demo}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="panel flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-ink transition-colors hover:border-cyan/40"
+                    className="panel flex items-center gap-3 rounded px-4 py-3 text-sm font-medium text-ink transition-colors hover:border-teal/40"
                   >
-                    <ExternalLink className="size-4 text-cyan" aria-hidden />
+                    <ExternalLink className="size-4 text-mineral" aria-hidden />
                     {dict.projects.demo}
                     <ArrowUpRight className="ms-auto size-4 text-dim" aria-hidden />
                   </a>
                 )}
                 {project.links.private && (
-                  <p className="panel flex items-start gap-3 rounded-xl px-4 py-3 text-sm leading-relaxed text-mist">
+                  <p className="panel flex items-start gap-3 rounded px-4 py-3 text-sm leading-relaxed text-mist">
                     <Lock className="mt-0.5 size-4 shrink-0 text-amber" aria-hidden />
                     {dict.projectPage.privateNote}
                   </p>
@@ -205,7 +204,7 @@ async function ProjectDetail({
                 <Link
                   key={p.slug}
                   href={`/${locale}/projects/${p.slug}`}
-                  className="panel group rounded-2xl p-5 transition-transform duration-300 hover:-translate-y-1"
+                  className="panel group p-5 transition-transform duration-300 hover:-translate-y-1"
                 >
                   <span
                     className="size-2 rounded-full"

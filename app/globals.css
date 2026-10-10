@@ -1,24 +1,28 @@
 @import "tailwindcss";
 
 @theme {
-  /* ── Palette: midnight depths + electric + warm accents ───────── */
-  --color-abyss: #04060f;
-  --color-midnight: #080d1f;
-  --color-deep: #0d1530;
-  --color-ink: #eef2ff;
-  --color-mist: #aab4d4;
-  --color-dim: #6b7699;
+  /* ── Palette: charcoal + mineral white + graphite + muted teal ── */
+  --color-abyss: #090a0c;
+  --color-midnight: #101114;
+  --color-deep: #14161a;
+  --color-ink: #e8e3d9;
+  --color-mist: #98958f;
+  --color-dim: #62605c;
 
-  --color-cobalt: #3b82f6;
-  --color-cyan: #38bdf8;
-  --color-violet: #a855f7;
-  --color-ultra: #818cf8;
-  --color-coral: #fb7185;
-  --color-amber: #fbbf24;
-  --color-mint: #34d399;
+  --color-teal: #5f8a86; /* muted teal — interactive accent */
+  --color-mineral: #718a9a;
+  --color-amber: #d9a05b; /* stellar amber — rare focal highlights */
+
+  /* legacy aliases kept palette-quiet so stray usages stay tasteful */
+  --color-cyan: #718a9a;
+  --color-cobalt: #5f7383;
+  --color-violet: #a08a72;
+  --color-ultra: #8fa2ae;
+  --color-coral: #5f8a86;
+  --color-mint: #7d8a74;
 
   --font-sans: var(--font-geist-sans), system-ui, sans-serif;
-  --font-display: var(--font-space-grotesk), var(--font-geist-sans), sans-serif;
+  --font-display: var(--font-fraunces), Georgia, serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
   --font-arabic: var(--font-plex-arabic), var(--font-geist-sans), sans-serif;
 }
@@ -38,7 +42,7 @@ html[dir="rtl"] body {
 }
 
 html[dir="rtl"] .font-display {
-  font-family: var(--font-plex-arabic), var(--font-space-grotesk), sans-serif;
+  font-family: var(--font-plex-arabic), var(--font-geist-sans), sans-serif;
   letter-spacing: 0;
 }
 
@@ -49,8 +53,8 @@ body {
 }
 
 ::selection {
-  background: color-mix(in srgb, var(--color-cyan) 35%, transparent);
-  color: #fff;
+  background: color-mix(in srgb, var(--color-teal) 35%, transparent);
+  color: var(--color-ink);
 }
 
 /* ── Film grain overlay ─────────────────────────────────────────── */
@@ -81,7 +85,7 @@ body {
 
 /* ── Typography helpers ─────────────────────────────────────────── */
 .font-display {
-  font-family: var(--font-space-grotesk), var(--font-geist-sans), sans-serif;
+  font-family: var(--font-fraunces), Georgia, serif;
 }
 
 .text-glow {
@@ -93,8 +97,8 @@ body {
 /* soft dark halo — keeps light display text readable over bright scenes */
 .text-halo {
   text-shadow:
-    0 2px 18px rgba(4, 6, 15, 0.55),
-    0 0 70px rgba(4, 6, 15, 0.4);
+    0 2px 18px rgba(9, 10, 12, 0.6),
+    0 0 70px rgba(9, 10, 12, 0.45);
 }
 
 /* ── Custom cursor ──────────────────────────────────────────────── */
@@ -120,10 +124,10 @@ body {
   width: 6px;
   height: 6px;
   border-radius: 999px;
-  background: #7dd3fc;
+  background: #e8e3d9;
   box-shadow:
-    0 0 8px rgba(125, 211, 252, 0.9),
-    0 0 22px rgba(56, 189, 248, 0.5);
+    0 0 8px rgba(232, 227, 217, 0.7),
+    0 0 20px rgba(95, 138, 134, 0.3);
 }
 
 .custom-cursor-ring {
@@ -133,52 +137,70 @@ body {
   width: 36px;
   height: 36px;
   border-radius: 999px;
-  border: 1.5px solid rgba(125, 211, 252, 0.55);
-  box-shadow: 0 0 18px rgba(56, 189, 248, 0.15) inset;
-  transition: border-color 0.2s ease, background 0.2s ease;
+  /* incomplete orbital arc — one open quadrant, slowly rotating */
+  border: 1.5px solid transparent;
+  border-top-color: rgba(232, 227, 217, 0.55);
+  border-right-color: rgba(232, 227, 217, 0.55);
+  border-bottom-color: rgba(232, 227, 217, 0.2);
+  animation: cursor-orbit 7s linear infinite;
 }
 
-.custom-cursor.is-link .custom-cursor-ring {
-  border-color: rgba(125, 211, 252, 0.95);
-  background: rgba(125, 211, 252, 0.08);
-}
-
+.custom-cursor.is-link .custom-cursor-ring,
 .custom-cursor.is-inspect .custom-cursor-ring {
-  border-color: rgba(52, 211, 153, 0.9);
-  box-shadow:
-    0 0 18px rgba(52, 211, 153, 0.25) inset,
-    0 0 24px rgba(52, 211, 153, 0.2);
+  border-top-color: rgba(95, 138, 134, 0.95);
+  border-right-color: rgba(95, 138, 134, 0.95);
+  border-bottom-color: rgba(95, 138, 134, 0.35);
+}
+
+@keyframes cursor-orbit {
+  to { rotate: 360deg; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .custom-cursor-ring { animation: none; }
 }
 
 .kicker {
   font-family: var(--font-geist-mono), ui-monospace, monospace;
   font-size: 0.72rem;
-  letter-spacing: 0.32em;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--color-mist);
 }
 
 html[dir="rtl"] .kicker {
-  letter-spacing: 0.12em;
+  letter-spacing: 0.08em;
 }
 
 /* ── Panels & controls ──────────────────────────────────────────── */
 .panel {
-  background: color-mix(in srgb, var(--color-deep) 55%, transparent);
-  border: 1px solid color-mix(in srgb, var(--color-ink) 9%, transparent);
-  backdrop-filter: blur(14px);
-  box-shadow:
-    0 18px 60px -20px color-mix(in srgb, #000 80%, transparent),
-    inset 0 1px 0 color-mix(in srgb, #fff 6%, transparent);
+  background: color-mix(in srgb, var(--color-midnight) 88%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-ink) 10%, transparent);
+  backdrop-filter: blur(10px);
+  border-radius: 4px;
+}
+
+/* clipped-corner variant — a cut, not a rounded card */
+.panel-cut {
+  border-radius: 0;
+  clip-path: polygon(
+    0 0,
+    calc(100% - 22px) 0,
+    100% 22px,
+    100% 100%,
+    22px 100%,
+    0 calc(100% - 22px)
+  );
 }
 
 .chip {
   border: 1px solid color-mix(in srgb, var(--color-ink) 14%, transparent);
-  background: color-mix(in srgb, var(--color-ink) 5%, transparent);
+  background: transparent;
   color: var(--color-mist);
-  font-size: 0.75rem;
-  padding: 0.25rem 0.65rem;
-  border-radius: 999px;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+  padding: 0.2rem 0.55rem;
+  border-radius: 2px;
   white-space: nowrap;
 }
 
@@ -187,48 +209,42 @@ html[dir="rtl"] .kicker {
   display: inline-flex;
   align-items: center;
   gap: 0.55rem;
-  border-radius: 999px;
+  border-radius: 3px;
   padding: 0.8rem 1.6rem;
   font-weight: 600;
   font-size: 0.9rem;
-  color: #04101f;
-  background: linear-gradient(120deg, var(--color-cyan), var(--color-cobalt));
-  box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--color-cyan) 60%, transparent),
-    0 10px 40px -10px color-mix(in srgb, var(--color-cobalt) 80%, transparent);
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  color: #0d0f11;
+  background: var(--color-ink);
+  transition: transform 0.25s ease, background 0.25s ease;
 }
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--color-cyan) 80%, transparent),
-    0 16px 50px -10px color-mix(in srgb, var(--color-cobalt) 90%, transparent);
+  background: color-mix(in srgb, var(--color-ink) 82%, var(--color-teal));
 }
 
 .btn-ghost {
   display: inline-flex;
   align-items: center;
   gap: 0.55rem;
-  border-radius: 999px;
+  border-radius: 3px;
   padding: 0.8rem 1.6rem;
   font-weight: 500;
   font-size: 0.9rem;
-  color: var(--color-ink);
-  border: 1px solid color-mix(in srgb, var(--color-ink) 18%, transparent);
-  background: color-mix(in srgb, var(--color-ink) 4%, transparent);
-  backdrop-filter: blur(10px);
-  transition: transform 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+  color: var(--color-mist);
+  border: 1px solid color-mix(in srgb, var(--color-ink) 16%, transparent);
+  background: transparent;
+  transition: transform 0.25s ease, border-color 0.25s ease, color 0.25s ease;
 }
 
 .btn-ghost:hover {
   transform: translateY(-2px);
-  border-color: color-mix(in srgb, var(--color-cyan) 55%, transparent);
-  background: color-mix(in srgb, var(--color-cyan) 8%, transparent);
+  border-color: color-mix(in srgb, var(--color-teal) 55%, transparent);
+  color: var(--color-ink);
 }
 
 :focus-visible {
-  outline: 2px solid var(--color-cyan);
+  outline: 2px solid var(--color-teal);
   outline-offset: 3px;
   border-radius: 4px;
 }
@@ -267,5 +283,5 @@ html[dir="rtl"] .kicker {
   border: 2px solid var(--color-abyss);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-cobalt);
+  background: var(--color-teal);
 }
