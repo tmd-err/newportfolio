@@ -15,11 +15,10 @@ export function HeroSection({ dict }: { dict: Dictionary }) {
 
         <h1 className="font-display text-halo max-w-2xl text-[13vw] font-light leading-[0.98] tracking-tight text-ink sm:text-8xl lg:text-[7.5rem]">
           Yahya Tamda
+          <span className="kicker text-halo mt-5 block !text-[0.8rem] font-normal text-teal">
+            {dict.hero.role}
+          </span>
         </h1>
-
-        <p className="kicker text-halo !text-[0.8rem] text-teal">
-          {dict.hero.role}
-        </p>
 
         <p className="text-halo max-w-md text-base leading-relaxed text-mist sm:text-lg">
           {dict.hero.intro}

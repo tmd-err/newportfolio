@@ -7,6 +7,7 @@ import { GithubIcon } from "@/components/ui/BrandIcons";
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
 import { getProject, projects } from "@/data/projects";
 import type { ProjectSlug } from "@/data/projects";
+import { profile } from "@/data/profile";
 import { ProjectBackdrop } from "@/components/ProjectBackdrop";
 
 export function generateStaticParams() {
@@ -44,6 +45,12 @@ export async function generateMetadata({
         ar: `/ar/projects/${project.slug}`,
       },
     },
+    openGraph: {
+      type: "article",
+      url: `/${locale}/projects/${project.slug}`,
+      title: copy.name,
+      description: copy.summary,
+    },
   };
 }
 
@@ -61,9 +68,31 @@ async function ProjectDetail({
   if (!project) notFound();
   const copy = dict.projects.items[project.slug as ProjectSlug];
   const others = projects.filter((p) => p.slug !== project.slug).slice(0, 3);
+  const breadcrumbLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: profile.name,
+        item: `${profile.siteUrl}/${locale}`,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: copy.name,
+        item: `${profile.siteUrl}/${locale}/projects/${project.slug}`,
+      },
+    ],
+  };
 
   return (
     <main id="content" className="relative z-10 min-h-svh">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
+      />
       {/* this project's own sky — its celestial body drifts behind the copy */}
       <ProjectBackdrop
         slug={project.slug}

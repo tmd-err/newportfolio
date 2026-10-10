@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { getDictionary, isLocale } from "@/lib/i18n";
 import { featuredProjects } from "@/data/projects";
+import { profile } from "@/data/profile";
 import { ExperienceLayer } from "@/features/experience/ExperienceLayer";
 import { ProgressRail } from "@/components/navigation/ProgressRail";
 import { RocketReturn } from "@/components/RocketReturn";
@@ -43,6 +44,49 @@ async function Journey({ params }: { params: Promise<{ locale: string }> }) {
   const locale = raw;
   const dict = await getDictionary(locale);
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Person",
+        "@id": `${profile.siteUrl}/#person`,
+        name: profile.name,
+        url: `${profile.siteUrl}/${locale}`,
+        jobTitle: dict.hero.role,
+        description: dict.hero.intro,
+        email: profile.email ? `mailto:${profile.email}` : undefined,
+        address: {
+          "@type": "PostalAddress",
+          addressLocality: "Rabat",
+          addressCountry: "MA",
+        },
+        knowsAbout: [
+          "Full-Stack Web Development",
+          "Web Application Development",
+          "Frontend Development",
+          "Backend Development",
+          "React",
+          "Next.js",
+          "Laravel",
+          "Node.js",
+          "REST APIs",
+          "Databases",
+          "Mobile Application Development",
+        ],
+        sameAs: [profile.github, profile.linkedin],
+      },
+      {
+        "@type": "WebSite",
+        "@id": `${profile.siteUrl}/#website`,
+        url: profile.siteUrl,
+        name: profile.name,
+        description: dict.meta.description,
+        inLanguage: ["en", "fr", "ar"],
+        author: { "@id": `${profile.siteUrl}/#person` },
+      },
+    ],
+  };
+
   const acts = [
     { id: "hero", label: "00" },
     { id: "about", label: dict.nav.about },
@@ -55,6 +99,10 @@ async function Journey({ params }: { params: Promise<{ locale: string }> }) {
 
   return (
     <div id="journey-scroll">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <ExperienceLayer locale={locale} dict={dict} />
       <ProgressRail acts={acts} label={dict.nav.progressLabel} />
       <RocketReturn label={dict.nav.returnToLaunch} />

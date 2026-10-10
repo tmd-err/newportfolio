@@ -2,9 +2,9 @@ import type { Dictionary } from "../types";
 
 const fr: Dictionary = {
   meta: {
-    title: "Yahya Tamda — Développeur Web Full Stack",
+    title: "Yahya Tamda | Développeur Full-Stack",
     description:
-      "Développeur web full stack junior basé à Rabat, Maroc. Je conçois des plateformes web robustes, élégantes et orientées produit — de la modélisation des données à des interfaces rapides et accessibles.",
+      "Portfolio de Yahya Tamda, développeur full-stack à Rabat, Maroc — applications web avec React, Next.js, Laravel et Node.js, API REST, bases de données, et projets mobiles sélectionnés.",
   },
   nav: {
     about: "Profil",

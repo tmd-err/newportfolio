@@ -65,6 +65,14 @@ export async function generateMetadata(): Promise<Metadata> {
       siteName: profile.name,
       locale: locale === "ar" ? "ar_MA" : locale === "fr" ? "fr_FR" : "en_US",
     },
+    twitter: {
+      card: "summary_large_image",
+      title: dict.meta.title,
+      description: dict.meta.description,
+    },
+    verification: {
+      google: "sPgwtgbyOomu7EbMkZe8NZSLhY-nmPMEaLtaqIgnwVI",
+    },
   };
 }
 

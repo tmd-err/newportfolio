@@ -2,9 +2,9 @@ import type { Dictionary } from "../types";
 
 const en: Dictionary = {
   meta: {
-    title: "Yahya Tamda — Full Stack Web Developer",
+    title: "Yahya Tamda | Full-Stack Web Developer",
     description:
-      "Junior full stack web developer based in Rabat, Morocco. I build robust, elegant, product-driven web platforms — from data modeling to fast, accessible interfaces.",
+      "Portfolio of Yahya Tamda, a full-stack web developer in Rabat, Morocco — web applications with React, Next.js, Laravel and Node.js, REST APIs, databases, and selected mobile development work.",
   },
   nav: {
     about: "About",
