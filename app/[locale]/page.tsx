@@ -4,6 +4,7 @@ import { getDictionary, isLocale } from "@/lib/i18n";
 import { featuredProjects } from "@/data/projects";
 import { ExperienceLayer } from "@/features/experience/ExperienceLayer";
 import { ProgressRail } from "@/components/navigation/ProgressRail";
+import { RocketReturn } from "@/components/RocketReturn";
 import { HeroSection } from "@/components/sections/HeroSection";
 import { AboutSection } from "@/components/sections/AboutSection";
 import { ProjectsIntroSection } from "@/components/sections/ProjectsIntroSection";
@@ -54,6 +55,7 @@ async function Journey({ params }: { params: Promise<{ locale: string }> }) {
     <div id="journey-scroll">
       <ExperienceLayer locale={locale} dict={dict} />
       <ProgressRail acts={acts} label={dict.nav.progressLabel} />
+      <RocketReturn label={dict.nav.returnToLaunch} />
 
       <main id="content" className="relative z-10">
         <HeroSection dict={dict} />

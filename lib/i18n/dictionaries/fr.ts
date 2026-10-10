@@ -18,6 +18,7 @@ const fr: Dictionary = {
     closeMenu: "Fermer le menu",
     languageSwitcher: "Changer de langue",
     progressLabel: "Progression du voyage",
+    returnToLaunch: "Retour au lancement",
   },
   hero: {
     availability: "Maroc · Disponible pour des opportunités web et produit",

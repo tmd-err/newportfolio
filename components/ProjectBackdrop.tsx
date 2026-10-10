@@ -4,8 +4,6 @@ import { useEffect, useSyncExternalStore } from "react";
 import { Canvas } from "@react-three/fiber";
 import {
   Planet,
-  Moon,
-  VolcanicBody,
   GasGiant,
   RingSystem,
   Starfield,
@@ -19,111 +17,148 @@ import type { ProjectSlug } from "@/data/projects";
  * worlds share the same composition.
  */
 
-const RUST = {
-  ocean: "#1a0d08",
-  shallow: "#3d2014",
-  low: "#7a3f24",
-  high: "#a86a3f",
-  ice: "#c9bfa8",
-  atmos: "#c98050",
-  landLevel: 0.4,
-  clouds: 0.3,
+const EARTH = {
+  ocean: "#0b2d4f",
+  shallow: "#1b5a7a",
+  low: "#2d5a33",
+  high: "#8a7a5c",
+  ice: "#dfe8f0",
+  atmos: "#4f8fd0",
+  landLevel: 0.51,
+  clouds: 0.7,
 };
 
-const TEAL = {
-  ocean: "#061a1c",
-  shallow: "#0e3436",
-  low: "#1d4a44",
-  high: "#2f5b52",
-  ice: "#cfe0dd",
-  atmos: "#3f7a7a",
-  landLevel: 0.55,
-  clouds: 0.5,
+const MARS = {
+  ocean: "#2a140e",
+  shallow: "#4a2418",
+  low: "#8a4526",
+  high: "#b06a3e",
+  ice: "#d8cfc0",
+  atmos: "#c98050",
+  landLevel: 0.38,
+  clouds: 0.25,
 };
 
 const SUN = [-0.7, 0.45, -0.55] as [number, number, number];
 
 function ProjectWorld({ slug }: { slug: ProjectSlug }) {
   switch (slug) {
-    case "edtech": // the rust planet — right edge, high
+    case "edtech": // Earth — right edge, high
       return (
         <Planet
           position={[6.5, 1.5, -15]}
           radius={5}
           sunDir={SUN}
-          spin={0.025}
-          palette={RUST}
+          spin={0.02}
+          palette={EARTH}
         />
       );
-    case "crafthub": // the pale mineral moon — left, low
+    case "crafthub": // Mars — left, low
       return (
-        <Moon
-          position={[-6, -1, -12]}
-          radius={3.4}
+        <Planet
+          position={[-6, -1, -13]}
+          radius={4}
           sunDir={SUN}
-          tint={[0.66, 0.64, 0.58]}
-          spin={0.008}
+          seed={9}
+          spin={0.02}
+          palette={MARS}
         />
       );
-    case "velora": // the ember world — right, low
+    case "velora": // Jupiter — right, dominant
       return (
-        <VolcanicBody
-          position={[6.5, -2.5, -13]}
-          radius={4.2}
+        <GasGiant
+          position={[6.5, 0.5, -16]}
+          radius={5.5}
           sunDir={SUN}
-          spin={0.015}
+          seed={4}
+          spin={0.035}
+          palette={{
+            a: "#d8c4a0",
+            b: "#b08d5f",
+            c: "#6e5136",
+            atmos: "#a89a7c",
+            contrast: 1,
+            spot: { lat: -0.28, lon: 0.6, size: 0.5, color: "#a05232" },
+          }}
         />
       );
-    case "autotrack": // the ringed giant — upper right
+    case "autotrack": // Saturn — upper right, ringed
       return (
         <group>
           <GasGiant
             position={[6, 2, -16]}
             radius={4.5}
             sunDir={SUN}
-            spin={0.035}
+            seed={8}
+            spin={0.028}
+            palette={{
+              a: "#e0d4ae",
+              b: "#c9b98f",
+              c: "#9a8a68",
+              atmos: "#cfc4a2",
+              contrast: 0.7,
+            }}
           />
           <RingSystem
             position={[6, 2, -16]}
             inner={6}
             outer={11.5}
             tilt={[1.35, 0.1, 0.3]}
-            tint="#a89a7c"
+            tint="#c2b490"
           />
         </group>
       );
-    case "facedetector": // the teal ocean world — left, high
+    case "facedetector": // Uranus — left, pale cyan
       return (
-        <Planet
+        <GasGiant
           position={[-6, 1.5, -13]}
           radius={4}
           sunDir={SUN}
-          seed={23}
-          spin={0.018}
-          palette={TEAL}
+          seed={12}
+          spin={0.02}
+          palette={{
+            a: "#a8ccd0",
+            b: "#93bcc2",
+            c: "#7fa8ae",
+            atmos: "#b8d8dc",
+            contrast: 0.2,
+          }}
         />
       );
-    case "scholvia":
+    case "scholvia": // Neptune — right, deep blue
       return (
-        <Planet
+        <GasGiant
           position={[6, -1, -14]}
           radius={4.5}
           sunDir={SUN}
-          seed={31}
+          seed={16}
           spin={0.02}
-          palette={RUST}
+          palette={{
+            a: "#4a6fae",
+            b: "#3a5a92",
+            c: "#2a4270",
+            atmos: "#6a8fc4",
+            contrast: 0.65,
+            spot: { lat: -0.2, lon: 2.2, size: 0.4, color: "#1c3054" },
+          }}
         />
       );
-    case "autonova":
+    case "autonova": // Venus — left, creamy
     default:
       return (
-        <Moon
+        <GasGiant
           position={[-5.5, 0.5, -12]}
-          radius={3.6}
+          radius={3.8}
           sunDir={SUN}
-          tint={[0.6, 0.52, 0.46]}
-          seed={41}
+          seed={6}
           spin={0.008}
+          palette={{
+            a: "#d8c9a3",
+            b: "#c9b48d",
+            c: "#b39a76",
+            atmos: "#e8dcc0",
+            contrast: 0.35,
+          }}
         />
       );
   }

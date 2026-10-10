@@ -35,8 +35,8 @@ export const projects: Project[] = [
   {
     slug: "edtech",
     featured: true,
-    accent: "#b0653f", // rust — the rocky world
-    accentSoft: "#7a4a33",
+    accent: "#4a8fb8", // Earth blue
+    accentSoft: "#3a6f92",
     scene: "panels",
     stack: ["Next.js", "Laravel", "PostgreSQL", "REST API"],
     links: { github: "https://github.com/tmd-err/EdTech" },
@@ -44,8 +44,8 @@ export const projects: Project[] = [
   {
     slug: "crafthub",
     featured: true,
-    accent: "#a9bcc4", // pale ice — the mineral moon
-    accentSoft: "#7d96a2",
+    accent: "#b0653f", // Mars rust
+    accentSoft: "#7a4a33",
     scene: "market",
     stack: ["MongoDB", "Express", "React", "Node.js", "Docker"],
     links: { github: "https://github.com/tmd-err/Crafthub" },
@@ -53,8 +53,8 @@ export const projects: Project[] = [
   {
     slug: "velora",
     featured: true,
-    accent: "#d07840", // ember — the volcanic body
-    accentSoft: "#9a5230",
+    accent: "#c8a06a", // Jupiter ochre
+    accentSoft: "#96754a",
     scene: "luxury",
     stack: ["React", "Next.js", "Tailwind CSS"],
     links: { github: "https://github.com/tmd-err/Velora" },
@@ -62,8 +62,8 @@ export const projects: Project[] = [
   {
     slug: "autotrack",
     featured: true,
-    accent: "#c8b288", // ochre — the ringed giant
-    accentSoft: "#97835f",
+    accent: "#c9bb95", // Saturn gold
+    accentSoft: "#9a8f6f",
     scene: "network",
     stack: ["Laravel", "MySQL", "PHPUnit"],
     links: { github: "https://github.com/tmd-err/Autotrack" },
@@ -71,8 +71,8 @@ export const projects: Project[] = [
   {
     slug: "facedetector",
     featured: true,
-    accent: "#5f9ba0", // teal — the ocean world
-    accentSoft: "#447a80",
+    accent: "#8fc3c9", // Uranus cyan
+    accentSoft: "#6a99a0",
     scene: "scanner",
     stack: ["Python", "OpenCV", "TensorFlow", "DeepFace"],
     links: { github: "https://github.com/tmd-err/FaceDetector" },

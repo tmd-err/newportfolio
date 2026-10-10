@@ -21,7 +21,7 @@ export default function ExperienceCanvas() {
   return (
     <Canvas
       dpr={journey.lowQuality ? [1, 1.25] : [1, 1.75]}
-      camera={{ fov: 55, near: 0.1, far: 1200, position: [0, 0, 4] }}
+      camera={{ fov: 55, near: 0.1, far: 1700, position: [0, 0, 4] }}
       shadows={false}
       gl={{
         antialias: !journey.lowQuality,

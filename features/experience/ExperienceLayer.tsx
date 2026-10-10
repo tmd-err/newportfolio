@@ -7,6 +7,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { journey } from "./journey-store";
 import { CustomCursor } from "@/components/ui/CustomCursor";
+import { DestinationHud } from "@/components/DestinationHud";
 import type { Dictionary } from "@/lib/i18n/types";
 
 const ExperienceCanvas = dynamic(() => import("./ExperienceCanvas"), {
@@ -159,6 +160,7 @@ export function ExperienceLayer({
         </div>
       )}
       <CustomCursor />
+      <DestinationHud />
     </>
   );
 }

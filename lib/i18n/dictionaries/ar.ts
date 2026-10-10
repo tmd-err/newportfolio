@@ -18,6 +18,7 @@ const ar: Dictionary = {
     closeMenu: "إغلاق القائمة",
     languageSwitcher: "تغيير اللغة",
     progressLabel: "تقدّم الرحلة",
+    returnToLaunch: "العودة إلى نقطة الانطلاق",
   },
   hero: {
     availability: "المغرب · متاح لفرص الويب والمنتجات",

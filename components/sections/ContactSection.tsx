@@ -3,6 +3,7 @@ import { GithubIcon, LinkedinIcon } from "@/components/ui/BrandIcons";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { profile } from "@/data/profile";
 import { Reveal } from "@/components/Reveal";
+import { GravityText } from "@/components/GravityText";
 import { SceneSection } from "./SectionShell";
 import { ContactForm } from "./ContactForm";
 
@@ -46,7 +47,7 @@ export function ContactSection({
         <Reveal>
           <p className="kicker text-halo">{dict.contact.label}</p>
           <h2 className="font-display text-halo mt-3 text-4xl font-bold leading-[1.05] text-ink sm:text-5xl">
-            {dict.contact.heading}
+            <GravityText text={dict.contact.heading} focal={{ x: 0.62, y: 0.42 }} />
           </h2>
           <p className="text-halo mt-4 max-w-md text-[15px] leading-relaxed text-ink/85">
             {dict.contact.intro}

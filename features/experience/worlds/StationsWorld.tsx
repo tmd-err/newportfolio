@@ -10,11 +10,11 @@ import { featuredProjects } from "@/data/projects";
  * the project page. Positions match the CAMERA_KEYS look targets.
  */
 const ORBS: Record<string, { pos: [number, number, number]; tilt: number }> = {
-  edtech: { pos: [-30, 8, -165], tilt: 0.55 },       // beside the rust planet
-  crafthub: { pos: [34, -16, -330], tilt: -0.4 },    // low right, icy moon
-  velora: { pos: [-34, -22, -455], tilt: 0.9 },      // low left, volcanic field
-  autotrack: { pos: [26, 20, -585], tilt: -0.65 },   // high right, ringed giant
-  facedetector: { pos: [4, -2, -640], tilt: 0.3 },   // deep dark, teal world
+  edtech: { pos: [-24, 7, -368], tilt: 0.55 },       // before Earth
+  crafthub: { pos: [23, -11, -488], tilt: -0.4 },    // before Mars
+  velora: { pos: [-28, 15, -662], tilt: 0.9 },       // before Jupiter
+  autotrack: { pos: [29, 19, -822], tilt: -0.65 },   // before Saturn
+  facedetector: { pos: [-20, -15, -965], tilt: 0.3 }, // before Uranus
 };
 
 export function StationsWorld() {

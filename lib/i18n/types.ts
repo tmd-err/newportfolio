@@ -35,6 +35,7 @@ export interface Dictionary {
     closeMenu: string;
     languageSwitcher: string;
     progressLabel: string;
+    returnToLaunch: string;
   };
   hero: {
     availability: string;

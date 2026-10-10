@@ -12,50 +12,53 @@ export interface ColorStop {
 }
 
 /**
- * The cosmic journey choreographed as camera keyframes.
+ * The solar-system tour choreographed as camera keyframes.
  *
- * Space map — destinations are widely separated, not on one axis:
- *   rust planet     (-40,  14,-180)  far left
- *   icy moon        ( 55, -26,-360)  low right
- *   volcanic body   (-52, -34,-480)  deep low left
- *   teal world      ( 16, -12,-660)  deep right
- *   ringed giant    ( 42,  34,-620)  high right
- *   system star     (-95,  60,-720)  far upper-left sun
- *   final star+disc (  0,  12,-830)  deep center
+ * Space map (compressed distances, real order):
+ *   Sun      (-180, 100,-250)    Mercury (-30,  6,-120)
+ *   Venus    (  28, -10,-240)    Earth   (-32, 10,-380)
+ *   Mars     (  30, -14,-500)    belt    (  0, -5,-575)
+ *   Jupiter  ( -42,  18,-680)    Saturn  ( 40, 22,-840)
+ *   Uranus   ( -30, -18,-980)    Neptune ( 24, -8,-1100)
+ *   black hole (  0,  10,-1280)
  *
- * The route swings left → descends right → drops left → climbs right →
- * sinks into the deep: every leg differs in direction and elevation.
+ * Each leg differs: lateral swings, descents, a climb through the belt,
+ * a settling arc per planet, then the long dark fall into the hole.
  */
 export const CAMERA_KEYS: CameraKey[] = [
-  { p: 0.0, pos: [0, 0, 4], look: [-14, 4, -180] }, // open: terra distant-left
-  { p: 0.06, pos: [0, 0, -20], look: [-26, 8, -180] }, // gentle drift
-  { p: 0.13, pos: [-2, 1, -70], look: [-36, 12, -178] }, // about — drifting left
-  { p: 0.2, pos: [-10, 3, -120], look: [-38, 13, -180] }, // terra looms
-  { p: 0.27, pos: [-16, 5, -148], look: [-30, 8, -165] }, // edtech orb, planet behind
-  { p: 0.31, pos: [-10, 0, -210], look: [16, -8, -310] }, // transit: swing right, down
-  { p: 0.35, pos: [14, -10, -300], look: [34, -16, -330] }, // crafthub orb, moon beyond
-  { p: 0.39, pos: [12, -14, -370], look: [-16, -18, -430] }, // transit: back left, down
-  { p: 0.42, pos: [-10, -18, -420], look: [-34, -22, -455] }, // velora orb, embers behind
-  { p: 0.46, pos: [-6, -10, -470], look: [14, 10, -560] }, // transit: climb right
-  { p: 0.5, pos: [10, 4, -530], look: [26, 20, -585] }, // autotrack orb, giant behind
-  { p: 0.55, pos: [14, 10, -560], look: [4, 0, -625] }, // transit: leave the giant
-  { p: 0.58, pos: [6, 0, -600], look: [4, -2, -640] }, // facedetector orb, teal world
-  { p: 0.64, pos: [2, 2, -650], look: [0, 10, -825] }, // quiet — the star far ahead
-  { p: 0.71, pos: [0, 4, -685], look: [0, 11, -827] }, // skills — slow advance
-  { p: 0.79, pos: [-2, 6, -705], look: [-5, 13, -830] }, // journey — off-axis drift
-  { p: 0.88, pos: [0, 5, -735], look: [0, 11, -830] }, // cv — final approach
-  { p: 0.95, pos: [0, 4, -758], look: [0, 11, -831] }, // contact — settle
-  { p: 1.0, pos: [0, 4, -764], look: [0, 11, -833] }, // facing the star + disc
+  { p: 0.0, pos: [0, 0, 4], look: [-45, 18, -200] }, // open — Sun far upper-left
+  { p: 0.06, pos: [0, 0, -16], look: [-60, 22, -220] }, // gentle drift
+  { p: 0.115, pos: [-8, 1, -85], look: [-30, 6, -120] }, // Mercury — small crescent
+  { p: 0.155, pos: [-10, -1, -140], look: [10, -4, -230] }, // transit → Venus
+  { p: 0.195, pos: [10, -6, -212], look: [28, -10, -240] }, // Venus
+  { p: 0.235, pos: [6, -3, -285], look: [-18, 4, -365] }, // transit → Earth
+  { p: 0.27, pos: [-8, 2, -342], look: [-32, 10, -380] }, // Earth — edtech
+  { p: 0.315, pos: [-4, -1, -410], look: [16, -8, -480] }, // transit → Mars
+  { p: 0.35, pos: [12, -8, -468], look: [30, -14, -500] }, // Mars — crafthub
+  { p: 0.385, pos: [8, -6, -545], look: [-10, 4, -650] }, // through the belt
+  { p: 0.42, pos: [-14, 4, -640], look: [-42, 18, -680] }, // Jupiter — velora
+  { p: 0.46, pos: [-16, 8, -715], look: [16, 14, -815] }, // transit → Saturn
+  { p: 0.5, pos: [10, 11, -795], look: [40, 22, -840] }, // Saturn — autotrack
+  { p: 0.545, pos: [10, 8, -870], look: [-12, -8, -955] }, // transit → ice giants
+  { p: 0.58, pos: [-10, -10, -948], look: [-30, -18, -980] }, // Uranus — facedetector
+  { p: 0.615, pos: [-12, -12, -1015], look: [8, -6, -1075] }, // transit → Neptune
+  { p: 0.655, pos: [8, -8, -1080], look: [24, -8, -1100] }, // Neptune — supporting
+  { p: 0.71, pos: [4, -4, -1130], look: [0, 6, -1265] }, // the void — hole emerging
+  { p: 0.77, pos: [0, 0, -1180], look: [0, 8, -1280] }, // skills — the approach
+  { p: 0.83, pos: [-2, 3, -1212], look: [-3, 10, -1282] }, // journey — off-axis drift
+  { p: 0.9, pos: [0, 4, -1240], look: [0, 10, -1282] }, // cv — close approach
+  { p: 0.96, pos: [0, 4, -1252], look: [0, 10, -1282] }, // contact — event horizon
+  { p: 1.0, pos: [0, 4, -1258], look: [0, 10, -1283] }, // facing the shadow
 ];
 
 export const COLOR_STOPS: ColorStop[] = [
   { p: 0.0, bg: "#060708", fog: "#08090c" }, // void — charcoal, warm undertone
-  { p: 0.12, bg: "#06080c", fog: "#080b10" },
-  { p: 0.25, bg: "#080a14", fog: "#0a0d18" }, // indigo hint around the planet
-  { p: 0.4, bg: "#07080d", fog: "#090b12" },
-  { p: 0.56, bg: "#080a12", fog: "#0a0d16" },
-  { p: 0.66, bg: "#0a0c14", fog: "#0c0f18" }, // faint light from the system star
-  { p: 0.78, bg: "#07090e", fog: "#090c12" },
-  { p: 0.9, bg: "#070a10", fog: "#0a0d14" },
-  { p: 1.0, bg: "#0a0c12", fog: "#0c0e14" }, // the destination glow
+  { p: 0.12, bg: "#070809", fog: "#090a0d" }, // warm solar light nearby
+  { p: 0.27, bg: "#07090f", fog: "#090b13" }, // Earth's orbit
+  { p: 0.38, bg: "#080807", fog: "#0a0a0a" }, // the belt
+  { p: 0.5, bg: "#07080b", fog: "#090a0e" }, // giant realm
+  { p: 0.62, bg: "#06080c", fog: "#080a10" }, // ice giants — colder
+  { p: 0.75, bg: "#050608", fog: "#07080b" }, // the void
+  { p: 0.9, bg: "#040405", fog: "#050506" }, // near the hole
+  { p: 1.0, bg: "#030303", fog: "#040404" }, // the shadow
 ];

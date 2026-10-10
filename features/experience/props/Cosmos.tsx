@@ -593,12 +593,23 @@ export function GasGiant({
   sunDir = [-0.5, 0.3, -0.8],
   seed = 4,
   spin = 0.03,
+  palette,
 }: {
   position: [number, number, number];
   radius?: number;
   sunDir?: [number, number, number];
   seed?: number;
   spin?: number;
+  /** band colors + optional oval storm (e.g. the Great Red Spot) */
+  palette?: {
+    a: string;
+    b: string;
+    c: string;
+    atmos: string;
+    /** uniform band contrast 0..1 — low for smooth ice giants */
+    contrast?: number;
+    spot?: { lat: number; lon: number; size: number; color: string };
+  };
 }) {
   const mat = useRef<THREE.ShaderMaterial>(null);
   const uniforms = useMemo(
@@ -607,8 +618,21 @@ export function GasGiant({
       uSunDir: { value: new THREE.Vector3(...sunDir).normalize() },
       uSeed: { value: seed },
       uSpin: { value: spin },
+      uA: { value: new THREE.Color(palette?.a ?? "#8c7f66") },
+      uB: { value: new THREE.Color(palette?.b ?? "#73522f") },
+      uC: { value: new THREE.Color(palette?.c ?? "#42301f") },
+      uAtmos: { value: new THREE.Color(palette?.atmos ?? "#59554c") },
+      uContrast: { value: palette?.contrast ?? 1 },
+      uSpot: {
+        value: palette?.spot
+          ? new THREE.Vector4(palette.spot.lon, palette.spot.lat, palette.spot.size, 1)
+          : new THREE.Vector4(0, 0, 0, 0),
+      },
+      uSpotColor: {
+        value: new THREE.Color(palette?.spot?.color ?? "#a05232"),
+      },
     }),
-    [sunDir, seed, spin],
+    [sunDir, seed, spin, palette],
   );
   useFrame((state) => {
     if (mat.current && !journey.reducedMotion) {
@@ -637,6 +661,13 @@ export function GasGiant({
             uniform vec3 uSunDir;
             uniform float uSeed;
             uniform float uSpin;
+            uniform vec3 uA;
+            uniform vec3 uB;
+            uniform vec3 uC;
+            uniform vec3 uAtmos;
+            uniform float uContrast;
+            uniform vec4 uSpot; /* lon, lat, size, enabled */
+            uniform vec3 uSpotColor;
             varying vec3 vNormal;
             varying vec3 vPos;
             void main() {
@@ -647,22 +678,32 @@ export function GasGiant({
                 nrm.y,
                 sin(ang) * nrm.x + cos(ang) * nrm.z
               );
-              // horizontal storm bands — cream, ochre, muted brown
+              // horizontal storm bands with wobble
               float wob = fbm(vec2(nrm.x * 3.0, nrm.z * 3.0) + uSeed) * 0.6;
               float band = fbm(vec2((nrm.y + wob) * 6.5, uSeed));
-              vec3 cream = vec3(0.55, 0.50, 0.40);
-              vec3 ochre = vec3(0.45, 0.33, 0.20);
-              vec3 brown = vec3(0.26, 0.19, 0.13);
-              vec3 surf = mix(brown, cream, smoothstep(0.25, 0.6, band));
-              surf = mix(surf, ochre, smoothstep(0.6, 0.85, band) * 0.8);
+              // soften band contrast for smooth ice giants
+              float b0 = smoothstep(0.25, 0.6, band);
+              float b1 = smoothstep(0.6, 0.85, band);
+              vec3 mid = mix(uB, uA, 0.5 * (1.0 - uContrast));
+              vec3 surf = mix(uC, mid, b0);
+              surf = mix(surf, mix(uA, surf, 0.4), b1 * uContrast);
               // pale equatorial band
-              surf += vec3(0.14, 0.12, 0.09) * smoothstep(0.12, 0.0, abs(nrm.y + wob * 0.3));
+              surf += uA * 0.22 * smoothstep(0.12, 0.0, abs(nrm.y + wob * 0.3)) * uContrast;
+              // oval storm in the rotating domain
+              if (uSpot.w > 0.5) {
+                vec2 sdir = vec2(cos(uSpot.x), sin(uSpot.x));
+                vec2 flat2 = normalize(nrm.xz + 1e-4);
+                float dlon = acos(clamp(dot(sdir, flat2), -1.0, 1.0));
+                vec2 sd = vec2(dlon, (nrm.y - uSpot.y) * 2.4);
+                float spot = smoothstep(uSpot.z, uSpot.z * 0.55, length(sd));
+                surf = mix(surf, uSpotColor, spot * 0.85);
+              }
               float day = clamp(dot(vNormal, uSunDir), 0.0, 1.0);
               float terminator = smoothstep(0.0, 0.3, day);
               vec3 col = mix(surf * 0.06, surf * (0.4 + day * 1.3), terminator);
-              // subtle warm atmosphere rim
+              // subtle atmosphere rim in the planet's own haze color
               float rim = pow(1.0 - abs(dot(vNormal, vec3(0.0, 0.0, 1.0))), 3.5);
-              col += vec3(0.35, 0.30, 0.22) * rim * (0.15 + day * 0.5);
+              col += uAtmos * rim * (0.15 + day * 0.5);
               gl_FragColor = vec4(col, 1.0);
             }
           `}
@@ -1040,6 +1081,177 @@ export function DustField({
 }
 
 
+
+/* ── Black hole ─────────────────────────────────────────────────── */
+
+/**
+ * The finale: a true-black event horizon wrapped in a thin photon ring,
+ * an accretion disc, and — behind it — a lensing backdrop where the
+ * procedural star field is gravitationally deflected toward the hole's
+ * center, smearing nearby stars into arcs. Screen-space approximation.
+ */
+export function BlackHole({
+  position,
+  radius = 7,
+}: {
+  position: [number, number, number];
+  radius?: number;
+}) {
+  const backdrop = useRef<THREE.ShaderMaterial>(null);
+  const uniforms = useMemo(
+    () => ({ uTime: { value: 0 } }),
+    [],
+  );
+  useFrame((state) => {
+    if (backdrop.current && !journey.reducedMotion) {
+      backdrop.current.uniforms.uTime.value = state.clock.elapsedTime;
+    }
+  });
+  return (
+    <group position={position}>
+      {/* event horizon — unlit pure black */}
+      <mesh>
+        <sphereGeometry args={[radius, 48, 48]} />
+        <meshBasicMaterial color="#000000" />
+      </mesh>
+      {/* photon ring — the thinnest bright edge at the shadow's rim */}
+      <mesh rotation={[Math.PI / 2 - 0.15, 0, 0]}>
+        <torusGeometry args={[radius * 1.12, 0.05, 8, 96]} />
+        <meshBasicMaterial color="#ffe9c8" toneMapped={false} transparent opacity={0.85} />
+      </mesh>
+      {/* accretion disc — reused swirl shader */}
+      <AccretionDisc
+        position={[0, 0, 0]}
+        inner={radius * 1.35}
+        outer={radius * 7.5}
+        tilt={[1.25, 0, 0.12]}
+      />
+      {/* lensing backdrop — stars deflected around the mass */}
+      <mesh position={[0, 0, -55]}>
+        <planeGeometry args={[320, 190]} />
+        <shaderMaterial
+          ref={backdrop}
+          uniforms={uniforms}
+          transparent
+          depthWrite={false}
+          vertexShader={/* glsl */ `
+            varying vec2 vUv;
+            void main() {
+              vUv = uv;
+              gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+          `}
+          fragmentShader={/* glsl */ `
+            uniform float uTime;
+            varying vec2 vUv;
+
+            float hash21(vec2 p) {
+              return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+            }
+            // procedural star layer sampled at a deflected coordinate
+            float stars(vec2 p, float density) {
+              vec2 cell = floor(p * density);
+              vec2 f = fract(p * density);
+              float h = hash21(cell);
+              if (h < 0.86) return 0.0;
+              vec2 sp = vec2(hash21(cell + 7.3), hash21(cell + 13.7));
+              float d = length(f - sp);
+              float b = (h - 0.86) * 7.0;
+              return smoothstep(0.06, 0.0, d) * b;
+            }
+            void main() {
+              vec2 c = vec2(0.5);
+              vec2 uv = vUv;
+              vec2 d0 = uv - c;
+              float r = length(d0);
+              // gravitational deflection — rays bend toward the mass
+              float bend = 0.045 / max(r * r, 0.004);
+              vec2 defl = (d0 / max(r, 1e-4)) * bend;
+              vec2 su = uv - defl;
+              // star field at the bent coordinate, two scales
+              float s = stars(su * vec2(1.6, 1.0), 42.0) + stars(su, 78.0) * 0.6;
+              // slight chromatic fringing from the bending
+              float s2 = stars((uv - defl * 1.15) * vec2(1.6, 1.0), 42.0);
+              vec3 col = vec3(s * 0.9, s * 0.95, s);
+              col += vec3(0.35, 0.45, 0.7) * s2 * 0.5;
+              // einstein-ring glow — a thin bright arc where deflection peaks
+              float ring = exp(-pow((r - 0.075) * 34.0, 2.0));
+              col += vec3(1.0, 0.86, 0.62) * ring * 0.9;
+              // fade at plane edges
+              float edge = smoothstep(0.0, 0.12, uv.x) * smoothstep(1.0, 0.88, uv.x)
+                         * smoothstep(0.0, 0.14, uv.y) * smoothstep(1.0, 0.86, uv.y);
+              gl_FragColor = vec4(col * edge, edge);
+            }
+          `}
+        />
+      </mesh>
+    </group>
+  );
+}
+
+/* ── Asteroid belt ──────────────────────────────────────────────── */
+
+/**
+ * A sparse rocky belt the route crosses between Mars and Jupiter.
+ * Instanced, irregular, dimly sunlit — a field of rubble, not decor.
+ */
+export function AsteroidBelt({
+  center = [0, -5, -575],
+  count = 160,
+  spread = [110, 14, 55],
+  seed = 31,
+}: {
+  center?: [number, number, number];
+  count?: number;
+  spread?: [number, number, number];
+  seed?: number;
+}) {
+  const ref = useRef<THREE.InstancedMesh>(null);
+  const group = useRef<THREE.Group>(null);
+  useEffect(() => {
+    const mesh = ref.current;
+    if (!mesh) return;
+    const m = new THREE.Matrix4();
+    const q = new THREE.Quaternion();
+    const e = new THREE.Euler();
+    const s = new THREE.Vector3();
+    const rng = mulberry32(seed);
+    for (let i = 0; i < count; i++) {
+      e.set(rng() * Math.PI, rng() * Math.PI, rng() * Math.PI);
+      q.setFromEuler(e);
+      const sc = 0.25 + rng() * 0.9;
+      s.set(sc, sc * (0.6 + rng() * 0.7), sc * (0.8 + rng() * 0.5));
+      m.compose(
+        new THREE.Vector3(
+          (rng() - 0.5) * spread[0],
+          (rng() - 0.5) * spread[1],
+          (rng() - 0.5) * spread[2],
+        ),
+        q,
+        s,
+      );
+      mesh.setMatrixAt(i, m);
+    }
+    mesh.instanceMatrix.needsUpdate = true;
+  }, [count, spread, seed]);
+
+  useFrame((state, delta) => {
+    if (group.current && !journey.reducedMotion) {
+      group.current.rotation.y += delta * 0.004;
+    }
+  });
+
+  return (
+    <group position={center}>
+      <group ref={group}>
+        <instancedMesh ref={ref} args={[undefined, undefined, count]} frustumCulled={false}>
+          <icosahedronGeometry args={[1, 0]} />
+          <meshStandardMaterial color="#5c5348" roughness={0.95} metalness={0.05} />
+        </instancedMesh>
+      </group>
+    </group>
+  );
+}
 
 /* ── Project orb ────────────────────────────────────────────────── */
 
