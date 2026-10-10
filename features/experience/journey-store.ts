@@ -20,6 +20,11 @@ export const journey = {
   /** lower fidelity for small screens / weak GPUs */
   lowQuality: false,
 
+  /** "birth of the universe" intro: 0..1 timeline, done flag, skip request */
+  introT: 1,
+  introDone: true,
+  introSkip: false,
+
   /** slug of the 3D installation currently hovered, if any */
   hoveredSlug: null as string | null,
   /** DOM tooltip wants hover updates */

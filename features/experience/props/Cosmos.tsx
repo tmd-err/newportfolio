@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { journey, setHovered } from "../journey-store";
+import { clamp01, smoothstep } from "@/lib/utils";
 import type { Project } from "@/data/projects";
 
 /**
@@ -149,6 +150,7 @@ export function Starfield({
       uniforms: {
         uTime: { value: 0 },
         uPointer: { value: new THREE.Vector2(10, 10) }, // off-screen
+        uDim: { value: 1 },
       },
     };
   }, [count, radius, zMin, zMax, size, seed]);
@@ -156,6 +158,10 @@ export function Starfield({
   useFrame((state) => {
     if (mat.current) {
       mat.current.uniforms.uPointer.value.set(journey.ndcX, journey.ndcY);
+      // dim during the birth intro — stars appear as the star forms
+      mat.current.uniforms.uDim.value = journey.introDone
+        ? 1
+        : 0.12 + 0.88 * smoothstep(clamp01((journey.introT - 0.5) / 0.42));
       if (!journey.reducedMotion) {
         mat.current.uniforms.uTime.value = state.clock.elapsedTime;
       }
@@ -198,13 +204,14 @@ export function Starfield({
         `}
         fragmentShader={/* glsl */ `
           uniform float uTime;
+          uniform float uDim;
           varying vec3 vColor;
           varying float vTw;
           void main() {
             float d = length(gl_PointCoord - 0.5);
             float a = smoothstep(0.5, 0.08, d);
             float tw = 0.72 + 0.28 * sin(uTime * vTw + vTw * 12.0);
-            gl_FragColor = vec4(vColor, a * tw);
+            gl_FragColor = vec4(vColor, a * tw * uDim);
           }
         `}
       />
@@ -1022,6 +1029,7 @@ const SUN_SURFACE_FRAG = /* glsl */ `
   ${NOISE3_GLSL}
   uniform float uTime;
   uniform float uDetail;
+  uniform float uBirth;
   varying vec3 vObj;
   varying vec3 vNormV;
   varying vec3 vViewV;
@@ -1065,7 +1073,7 @@ const SUN_SURFACE_FRAG = /* glsl */ `
     float mu = clamp(dot(normalize(vNormV), normalize(vViewV)), 0.0, 1.0);
     col = mix(col * vec3(1.0, 0.55, 0.28) * 0.62, col, pow(mu, 0.55));
 
-    gl_FragColor = vec4(col, 1.0);
+    gl_FragColor = vec4(col * uBirth, 1.0);
   }
 `;
 
@@ -1086,6 +1094,7 @@ const SUN_SHELL_VERT = /* glsl */ `
 const SUN_RIM_FRAG = /* glsl */ `
   ${NOISE3_GLSL}
   uniform float uTime;
+  uniform float uBirth;
   varying vec3 vObj;
   varying vec3 vNormV;
   varying vec3 vViewV;
@@ -1098,7 +1107,7 @@ const SUN_RIM_FRAG = /* glsl */ `
     float fil2 = fbm3(n * 14.0 - uTime * 0.07);
     float a = rim * (0.35 + fil * 0.75 + fil2 * 0.3);
     vec3 col = mix(vec3(1.0, 0.5, 0.12), vec3(1.2, 0.9, 0.4), fil);
-    gl_FragColor = vec4(col, a);
+    gl_FragColor = vec4(col, a * uBirth);
   }
 `;
 
@@ -1113,6 +1122,7 @@ const SUN_CORONA_VERT = /* glsl */ `
 const SUN_CORONA_FRAG = /* glsl */ `
   ${NOISE_GLSL}
   uniform float uTime;
+  uniform float uBirth;
   varying vec2 vUv;
   void main() {
     float d = length(vUv);
@@ -1127,7 +1137,7 @@ const SUN_CORONA_FRAG = /* glsl */ `
     float a = fall * (0.65 + wisps * 0.35) * smoothstep(1.0, 0.7, d);
 
     vec3 col = mix(vec3(1.1, 0.5, 0.1), vec3(1.3, 1.15, 0.8), exp(-d * 6.0));
-    gl_FragColor = vec4(col, a * 0.85);
+    gl_FragColor = vec4(col, a * 0.85 * uBirth);
   }
 `;
 
@@ -1142,6 +1152,8 @@ export function Sun({
   position: [number, number, number];
   radius?: number;
 }) {
+  const root = useRef<THREE.Group>(null);
+  const light = useRef<THREE.PointLight>(null);
   const surf = useRef<THREE.ShaderMaterial>(null);
   const rim = useRef<THREE.ShaderMaterial>(null);
   const corona = useRef<THREE.Mesh>(null);
@@ -1155,15 +1167,37 @@ export function Sun({
     () => ({
       uTime: { value: 0 },
       uDetail: { value: detail },
+      uBirth: { value: 1 },
     }),
     [detail],
   );
-  const rimUniforms = useMemo(() => ({ uTime: { value: 0 } }), []);
-  const coronaUniforms = useMemo(() => ({ uTime: { value: 0 } }), []);
+  const rimUniforms = useMemo(
+    () => ({ uTime: { value: 0 }, uBirth: { value: 1 } }),
+    [],
+  );
+  const coronaUniforms = useMemo(
+    () => ({ uTime: { value: 0 }, uBirth: { value: 1 } }),
+    [],
+  );
 
   useFrame((state) => {
     const t = state.clock.elapsedTime;
     const reduced = journey.reducedMotion;
+
+    // ── birth factor: 0 → newborn seed, 1 → full star ─────────────
+    const birth = journey.introDone
+      ? 1
+      : smoothstep(clamp01((journey.introT - 0.5) / 0.32));
+    const ease = 1 - (1 - birth) * (1 - birth);
+    if (surf.current) surf.current.uniforms.uBirth.value = birth;
+    if (rim.current) rim.current.uniforms.uBirth.value = birth;
+    if (coronaMat.current) coronaMat.current.uniforms.uBirth.value = birth;
+    if (root.current) {
+      const s = 0.03 + 0.97 * ease;
+      root.current.scale.setScalar(s);
+    }
+    if (light.current) light.current.intensity = 5 * ease;
+
     if (!reduced) {
       if (surf.current) surf.current.uniforms.uTime.value = t;
       if (rim.current) rim.current.uniforms.uTime.value = t;
@@ -1178,7 +1212,7 @@ export function Sun({
   });
 
   return (
-    <group position={position}>
+    <group ref={root} position={position}>
       {/* photosphere */}
       <mesh ref={photosphere}>
         <sphereGeometry args={[radius, seg, seg]} />
@@ -1219,7 +1253,7 @@ export function Sun({
       </mesh>
 
       {/* sunlight */}
-      <pointLight color="#ffd9a0" intensity={5} distance={0} decay={0.6} />
+      <pointLight ref={light} color="#ffd9a0" intensity={5} distance={0} decay={0.6} />
     </group>
   );
 }

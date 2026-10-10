@@ -4,6 +4,7 @@ import { Canvas } from "@react-three/fiber";
 import { Environment, Lightformer } from "@react-three/drei";
 import { CameraRig } from "./CameraRig";
 import { InteractionRig } from "./InteractionRig";
+import { BirthSequence } from "./BirthSequence";
 import { DeepSpaceWorld } from "./worlds/DeepSpaceWorld";
 import { PlanetWorld } from "./worlds/PlanetWorld";
 import { StationsWorld } from "./worlds/StationsWorld";
@@ -42,6 +43,7 @@ export default function ExperienceCanvas() {
 
       <CameraRig />
       <InteractionRig />
+      <BirthSequence />
 
       <DeepSpaceWorld />
       <PlanetWorld />

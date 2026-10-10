@@ -19,6 +19,7 @@ const en: Dictionary = {
     languageSwitcher: "Change language",
     progressLabel: "Journey progress",
     returnToLaunch: "Return to launch",
+    skipIntro: "Skip intro",
   },
   hero: {
     availability: "Rabat, Morocco — open to web & product opportunities",

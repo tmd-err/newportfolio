@@ -26,6 +26,14 @@ const _bg = new THREE.Color("#5fb3e8");
 const _fog = new THREE.Color("#a8d4ea");
 const _fwd = new THREE.Vector3();
 
+// Birth-of-the-universe intro: face the Sun from a distance, drift in,
+// then hand off to the scroll path's first keyframe.
+const INTRO_A = new THREE.Vector3(-120, 74, -120);
+const INTRO_B = new THREE.Vector3(-158, 86, -196);
+const INTRO_LOOK = new THREE.Vector3(-180, 100, -250);
+const _introPos = new THREE.Vector3();
+const _introLook = new THREE.Vector3();
+
 let prevHeading = 0;
 let roll = 0;
 
@@ -53,6 +61,17 @@ export function CameraRig() {
       _pos.y += journey.pointerY * 0.25;
       _look.x += journey.pointerX * 0.8;
       _look.y += journey.pointerY * 0.5;
+    }
+
+    // ── intro camera: watch the star form, then glide to the start ─
+    if (!journey.introDone) {
+      const T = clamp01(journey.introT);
+      const approach = smoothstep(clamp01(T / 0.78));
+      _introPos.lerpVectors(INTRO_A, INTRO_B, approach);
+      _introLook.copy(INTRO_LOOK);
+      const hand = smoothstep(clamp01((T - 0.8) / 0.2));
+      _pos.lerpVectors(_introPos, _pos, hand);
+      _look.lerpVectors(_introLook, _look, hand);
     }
 
     state.camera.position.copy(_pos);

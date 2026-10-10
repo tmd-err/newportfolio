@@ -8,6 +8,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { journey } from "./journey-store";
 import { CustomCursor } from "@/components/ui/CustomCursor";
 import { DestinationHud } from "@/components/DestinationHud";
+import { BirthOverlay } from "@/components/BirthOverlay";
 import type { Dictionary } from "@/lib/i18n/types";
 
 const ExperienceCanvas = dynamic(() => import("./ExperienceCanvas"), {
@@ -73,6 +74,20 @@ export function ExperienceLayer({
     };
   }, [locale, router]);
 
+  // arm the birth intro once per session (before scroll init)
+  useEffect(() => {
+    if (!webgl) return;
+    try {
+      if (!sessionStorage.getItem("yt-born")) {
+        journey.introT = 0;
+        journey.introDone = false;
+      }
+    } catch {
+      journey.introT = 0;
+      journey.introDone = false;
+    }
+  }, [webgl]);
+
   useEffect(() => {
     if (!webgl) return;
     gsap.registerPlugin(ScrollTrigger);
@@ -115,25 +130,31 @@ export function ExperienceLayer({
     ? dict.projects.items[hovered as keyof typeof dict.projects.items]?.name
     : null;
 
+  const overlay = <BirthOverlay skipLabel={dict.nav.skipIntro} />;
+
   if (!webgl) {
     // graceful fallback: layered aurora gradients behind the content
     return (
-      <div
-        aria-hidden
-        className="pointer-events-none fixed inset-0 -z-10"
-        style={{
+      <>
+        {overlay}
+        <div
+          aria-hidden
+          className="pointer-events-none fixed inset-0 -z-10"
+          style={{
           background:
             "radial-gradient(60% 50% at 20% 15%, rgba(113,138,154,.14), transparent 60%)," +
             "radial-gradient(50% 40% at 80% 30%, rgba(70,80,95,.12), transparent 60%)," +
             "radial-gradient(55% 45% at 60% 85%, rgba(183,121,85,.10), transparent 60%)," +
             "#090a0c",
-        }}
-      />
+          }}
+        />
+      </>
     );
   }
 
   return (
     <>
+      {overlay}
       <div aria-hidden className="pointer-events-none fixed inset-0 -z-10">
         <ExperienceCanvas />
         {/* gentle vignette — keeps light UI text readable over bright scenes */}

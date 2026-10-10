@@ -403,3 +403,17 @@ html[dir="rtl"] .rocket-btn {
   30% { opacity: 1; }
   100% { color: var(--color-dim); }
 }
+
+/* ── birth-of-the-universe intro ──────────────────────────────────
+   While the intro runs, site UI stays invisible; it fades back in
+   when html[data-intro] is removed at the handoff. */
+#content, header, footer, [data-site-ui] {
+  transition: opacity 0.9s ease;
+}
+html[data-intro="1"] #content,
+html[data-intro="1"] header,
+html[data-intro="1"] footer,
+html[data-intro="1"] [data-site-ui] {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}

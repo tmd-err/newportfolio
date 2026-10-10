@@ -48,6 +48,7 @@ export function DestinationHud() {
     <div
       ref={ref}
       aria-hidden
+      data-site-ui
       className="pointer-events-none fixed bottom-6 right-6 z-20 font-mono text-[10px] tracking-[0.28em] text-dim rtl:right-auto rtl:left-6"
     />
   );

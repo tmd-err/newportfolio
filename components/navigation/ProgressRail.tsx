@@ -63,6 +63,7 @@ export function ProgressRail({
   return (
     <nav
       aria-label={label}
+      data-site-ui
       className="fixed end-4 top-1/2 z-40 hidden -translate-y-1/2 flex-col gap-3 md:flex"
     >
       {acts.map((act, i) => (

@@ -26,6 +26,7 @@ export function RocketReturn({ label }: { label: string }) {
       aria-label={label}
       title={label}
       className="rocket-btn group"
+      data-site-ui
       data-launching={launching || undefined}
     >
       <span className="rocket-label">{label}</span>
