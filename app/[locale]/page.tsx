@@ -14,6 +14,8 @@ import { SkillsSection } from "@/components/sections/SkillsSection";
 import { JourneySection } from "@/components/sections/JourneySection";
 import { CvSection } from "@/components/sections/CvSection";
 import { ContactSection } from "@/components/sections/ContactSection";
+import { ChatSection } from "@/components/sections/ChatSection";
+import { ChatWidget } from "@/components/chat/ChatWidget";
 import { SiteFooter } from "@/components/sections/SiteFooter";
 
 const PROJECT_SIDES: Record<
@@ -57,6 +59,7 @@ async function Journey({ params }: { params: Promise<{ locale: string }> }) {
       <ProgressRail acts={acts} label={dict.nav.progressLabel} />
       <RocketReturn label={dict.nav.returnToLaunch} />
 
+      <ChatWidget dict={dict.chat} />
       <main id="content" className="relative z-10">
         <HeroSection dict={dict} />
         <AboutSection dict={dict} />
@@ -77,6 +80,7 @@ async function Journey({ params }: { params: Promise<{ locale: string }> }) {
         <JourneySection dict={dict} />
         <CvSection dict={dict} />
         <ContactSection dict={dict} locale={locale} />
+        <ChatSection dict={dict} />
       </main>
       <SiteFooter dict={dict} />
     </div>

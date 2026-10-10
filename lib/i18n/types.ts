@@ -108,6 +108,18 @@ export interface Dictionary {
     tagline: string;
     rights: string;
   };
+  chat: {
+    sectionLabel: string;
+    heading: string;
+    intro: string;
+    title: string;
+    greeting: string;
+    placeholder: string;
+    send: string;
+    open: string;
+    close: string;
+    errorMsg: string;
+  };
   projectPage: {
     overview: string;
     stack: string;

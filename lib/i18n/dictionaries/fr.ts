@@ -266,6 +266,20 @@ const fr: Dictionary = {
     tagline: "Conçu et développé comme un voyage — pas comme une page.",
     rights: "Tous droits réservés.",
   },
+  chat: {
+    sectionLabel: "Épilogue — Le signal",
+    heading: "Demandez à l'univers.",
+    intro:
+      "Une version IA de moi — demandez-lui tout sur mes projets, ma stack, mon parcours ou comment me joindre.",
+    title: "Discuter avec moi",
+    greeting:
+      "Salut, moi c'est Yahya — enfin, ma version IA. Posez-moi vos questions sur mes projets, ma stack ou comment me joindre.",
+    placeholder: "Un projet, une compétence, un contact…",
+    send: "Envoyer le message",
+    open: "Ouvrir le chat",
+    close: "Fermer le chat",
+    errorMsg: "Le signal s'est perdu — réessayez.",
+  },
   projectPage: {
     overview: "Aperçu",
     stack: "Stack technique",

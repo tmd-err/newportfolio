@@ -265,6 +265,20 @@ const en: Dictionary = {
     tagline: "Designed & built as a journey — not a page.",
     rights: "All rights reserved.",
   },
+  chat: {
+    sectionLabel: "Epilogue — The signal",
+    heading: "Ask the universe anything.",
+    intro:
+      "An AI version of me — ask it anything about my projects, my stack, my background, or how to reach me.",
+    title: "Chat with me",
+    greeting:
+      "Hey, I'm Yahya — well, the AI version of me. Ask me anything about my projects, my stack, or how to reach me.",
+    placeholder: "Ask about a project, a skill, contact…",
+    send: "Send message",
+    open: "Open chat",
+    close: "Close chat",
+    errorMsg: "The signal was lost — try again.",
+  },
   projectPage: {
     overview: "Overview",
     stack: "Technology stack",
