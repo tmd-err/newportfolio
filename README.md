@@ -101,11 +101,11 @@ labelled in the UI.
 
 ### Content sources
 
-All facts come from `public/assets/infos/tamda_yahya.pdf` and the previous
+All facts come from `public/assets/infos/cv_tamda_yahya.pdf` and the previous
 live site. Nothing is invented. To update content: edit `data/` (structure,
 links, stacks) and `lib/i18n/dictionaries/` (localized copy).
 
 ## Deployment
 
 Standard Vercel deployment — no env vars required. The CV is served as a
-static asset from `public/assets/infos/tamda_yahya.pdf`.
+static asset from `public/assets/infos/cv_tamda_yahya.pdf`.

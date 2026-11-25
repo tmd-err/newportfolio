@@ -7,6 +7,6 @@ export const profile = {
   whatsapp: "https://wa.me/212681533815",
   github: "https://github.com/tmd-err",
   linkedin: "https://www.linkedin.com/in/yahya-tamda-0660352a7/",
-  cvPath: "/assets/infos/tamda_yahya.pdf",
+  cvPath: "/assets/infos/cv_tamda_yahya.pdf",
   siteUrl: "https://tamdayahya.vercel.app",
 } as const;
